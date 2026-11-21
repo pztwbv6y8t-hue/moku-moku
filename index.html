@@ -103,6 +103,12 @@
   }
   .speed-btn.sel{background:linear-gradient(180deg,#79c75e,#4da537); color:#fff; border-color:#256b1d; box-shadow:inset 0 2px 0 rgba(255,255,255,.4), 0 3px 0 #256b1d;}
   .speed-btn .sp-sec{display:block; font-size:10px; font-weight:700; opacity:.75; margin-top:2px;}
+  .stage-note{font-size:13px; font-weight:700; color:#5a4020; line-height:1.5;}
+  .stage-grid{display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin-top:10px;}
+  .stage-btn{border:3px solid var(--bark); border-radius:12px; padding:8px 2px 7px; background:linear-gradient(180deg,#caa06a,#b08247); color:#3a2410; box-shadow:inset 0 2px 0 rgba(255,255,255,.35), 0 3px 0 var(--bark);}
+  .stage-btn .st-n{display:block; font-size:17px; font-weight:900;}
+  .stage-btn .st-s{display:block; font-size:10px; font-weight:700; opacity:.75; margin-top:1px;}
+  .stage-btn.done{background:linear-gradient(180deg,#79c75e,#4da537); color:#fff; border-color:#256b1d;}
   .start-stack{display:grid; gap:10px; margin-top:16px;}
   .book-count{font-size:13px; font-weight:700; color:#f0dcb2; text-align:center; margin-top:2px;}
 
@@ -293,6 +299,7 @@
 
       <div class="start-stack">
         <button type="button" class="btn-leaf" id="btn-start">▶ 予習してスタート</button>
+        <button type="button" class="btn-wood" id="btn-to-stage">🎯 ステージを選んであそぶ</button>
         <button type="button" class="btn-wood" id="btn-to-book">🍂 苦手単語帳を見る</button>
         <p class="book-count" id="book-count"></p>
       </div>
@@ -301,7 +308,7 @@
 
   <!-- ===== 予習リスト画面 ===== -->
   <section id="screen-preview" class="hidden">
-    <h2 class="screen-title">🌿 予習リスト</h2>
+    <h2 class="screen-title" id="preview-title">🌿 予習リスト</h2>
     <div class="board">
       <div class="paper" style="padding:14px;">
         <div class="preview-top">
@@ -313,6 +320,20 @@
       <div class="stack">
         <button type="button" class="btn-leaf" id="btn-preview-start">▶ スタート（30秒）</button>
         <button type="button" class="btn-sub" id="btn-preview-back">スタートに戻る</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== ステージ選択画面 ===== -->
+  <section id="screen-stage" class="hidden">
+    <h2 class="screen-title" id="stage-title">🎯 ステージを選ぶ</h2>
+    <div class="board">
+      <div class="paper" style="padding:14px;">
+        <p class="stage-note">10語ずつのステージだよ。同じステージは何回でもあそべるよ。下の数字は「うろ覚え以上になった単語の数」だよ。</p>
+        <div class="stage-grid" id="stage-grid"></div>
+      </div>
+      <div class="stack">
+        <button type="button" class="btn-sub" id="btn-stage-back">スタートに戻る</button>
       </div>
     </div>
   </section>
@@ -2587,7 +2608,7 @@ function applyPlayResults(stats){
 }
 
 /* ================= 画面切り替え ================= */
-var screens = ["screen-start","screen-preview","screen-game","screen-result","screen-book"];
+var screens = ["screen-start","screen-preview","screen-game","screen-result","screen-book","screen-stage"];
 function show(id){
   screens.forEach(function(s){ document.getElementById(s).classList.toggle("hidden", s!==id); });
   window.scrollTo(0,0);
@@ -3178,6 +3199,11 @@ function wordItem(w, withBadge){
 
 /* ================= 予習リスト画面 ================= */
 var previewWords = [];
+var stageMode = false;
+var currentStage = 0;
+var STAGE_SIZE = 10;
+function stageWords(level, stage){ return WORDS[level].slice((stage-1)*STAGE_SIZE, stage*STAGE_SIZE); }
+function stageCount(level){ return Math.ceil(WORDS[level].length / STAGE_SIZE); }
 var previewChecked = {};
 function updatePreviewCount(){
   var n = Object.keys(previewChecked).filter(function(en){ return previewChecked[en]; }).length;
@@ -3221,14 +3247,44 @@ function previewItem(w){
   wrap.appendChild(headRow); wrap.appendChild(detail);
   return wrap;
 }
-function showPreview(){
-  previewWords = selectSessionWords(WORDS[selectedLevel]);
+function showPreview(fixedWords, titleText){
+  if(fixedWords){ previewWords = fixedWords.slice(); stageMode = true; }
+  else { previewWords = selectSessionWords(WORDS[selectedLevel]); stageMode = false; currentStage = 0; }
   previewChecked = {};
+  var title = document.getElementById("preview-title");
+  if(title) title.textContent = titleText || "🌿 予習リスト";
   var list = document.getElementById("preview-list");
   list.innerHTML = "";
   previewWords.forEach(function(w){ list.appendChild(previewItem(w)); });
   updatePreviewCount();
   show("screen-preview");
+}
+function showStageSelect(){
+  var title = document.getElementById("stage-title");
+  if(title) title.textContent = "🎯 ステージを選ぶ（レベル" + selectedLevel + "）";
+  var grid = document.getElementById("stage-grid");
+  grid.innerHTML = "";
+  var prog = loadProgress();
+  var total = stageCount(selectedLevel);
+  for(var st=1; st<=total; st++){
+    (function(stage){
+      var words = stageWords(selectedLevel, stage);
+      var cleared = 0;
+      words.forEach(function(w){ var p = prog[w.en]; if(p && p.rank>=1) cleared++; });
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "stage-btn" + (cleared>=words.length ? " done" : "");
+      var n = document.createElement("span"); n.className = "st-n"; n.textContent = (cleared>=words.length ? "✓ " : "") + stage;
+      var s = document.createElement("span"); s.className = "st-s"; s.textContent = cleared + "/" + words.length;
+      b.appendChild(n); b.appendChild(s);
+      b.addEventListener("click", function(){
+        currentStage = stage;
+        showPreview(stageWords(selectedLevel, stage), "🌿 予習リスト（レベル" + selectedLevel + " ステージ" + stage + "）");
+      });
+      grid.appendChild(b);
+    })(st);
+  }
+  show("screen-stage");
 }
 
 /* ================= 単語帳画面 ================= */
@@ -3285,12 +3341,18 @@ document.addEventListener("DOMContentLoaded", function(){
     updateBookCount(); show("screen-start");
   });
   document.getElementById("btn-to-book").addEventListener("click", function(){ renderBook(); show("screen-book"); });
+  document.getElementById("btn-to-stage").addEventListener("click", function(){ showStageSelect(); });
+  document.getElementById("btn-stage-back").addEventListener("click", function(){ updateBookCount(); show("screen-start"); });
   document.getElementById("btn-quit").addEventListener("click", function(){
     if(game){ game.ended = true; stopLoops(); }
     updateBookCount(); show("screen-start");
   });
   document.getElementById("btn-again").addEventListener("click", function(){
-    showPreview();
+    if(stageMode && currentStage>0){
+      showPreview(stageWords(selectedLevel, currentStage), "🌿 予習リスト（レベル" + selectedLevel + " ステージ" + currentStage + "）");
+    } else {
+      showPreview();
+    }
   });
   document.getElementById("btn-result-book").addEventListener("click", function(){ renderBook(); show("screen-book"); });
   document.getElementById("btn-result-home").addEventListener("click", function(){ updateBookCount(); show("screen-start"); });
