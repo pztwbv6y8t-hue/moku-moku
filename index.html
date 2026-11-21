@@ -176,6 +176,33 @@
   .choice.wrong{background:linear-gradient(180deg,#c99a52,#a5762f); color:#fff8ea; border-color:#6d4c14;}
   .quit-row{margin-top:10px; text-align:center;}
   .quit-btn{background:none; border:none; color:#f0dcb2; font-size:14px; font-weight:700; text-decoration:underline; min-height:44px; padding:8px 16px;}
+  /* ---------- コンボ段階エフェクト ---------- */
+  #field{transition:box-shadow .3s ease;}
+  #field.combo-s1{box-shadow:0 0 0 3px rgba(255,190,60,.55), inset 0 0 26px rgba(255,190,60,.20);}
+  #field.combo-s2{box-shadow:0 0 0 4px rgba(255,150,30,.75), 0 0 22px rgba(255,150,30,.45), inset 0 0 40px rgba(255,160,40,.28);}
+  #field.combo-s3{animation:comboPulse .8s ease-in-out infinite alternate;}
+  #field.combo-s4{animation:comboPulse .45s ease-in-out infinite alternate;}
+  @keyframes comboPulse{
+    from{box-shadow:0 0 0 4px rgba(255,180,0,.7), 0 0 20px rgba(255,180,0,.5), inset 0 0 34px rgba(255,190,0,.30);}
+    to{box-shadow:0 0 0 6px rgba(255,205,0,.95), 0 0 40px rgba(255,190,0,.8), inset 0 0 58px rgba(255,200,0,.45);}
+  }
+  #field.combo-s3::before, #field.combo-s4::before,
+  #field.combo-s3::after, #field.combo-s4::after{
+    content:"✦"; position:absolute; top:8px; z-index:5; pointer-events:none;
+    color:#ffcf3f; font-size:22px; text-shadow:0 0 12px rgba(255,190,0,.95);
+    animation:twinkle 1s ease-in-out infinite alternate;
+  }
+  #field.combo-s3::before, #field.combo-s4::before{left:12px;}
+  #field.combo-s3::after, #field.combo-s4::after{right:12px; animation-delay:.5s;}
+  @keyframes twinkle{from{opacity:.35; transform:scale(.8) rotate(0deg);} to{opacity:1; transform:scale(1.3) rotate(25deg);}}
+  #screen-game.combo-s1 #hud-combo{color:#e07b00;}
+  #screen-game.combo-s2 #hud-combo{color:#ff7a00; text-shadow:0 0 10px rgba(255,150,0,.65);}
+  #screen-game.combo-s3 #hud-combo, #screen-game.combo-s4 #hud-combo{
+    color:#ffb400; text-shadow:0 0 14px rgba(255,180,0,.85);
+    display:inline-block; animation:comboNumPulse .5s ease-in-out infinite alternate;
+  }
+  @keyframes comboNumPulse{from{transform:scale(1);} to{transform:scale(1.18);}}
+
   /* ---------- 20コンボ演出 ---------- */
   .combo-popup{
     position:absolute; inset:0; z-index:20; display:flex; align-items:center; justify-content:center;
@@ -306,7 +333,7 @@
       </div>
 
       <div class="start-stack">
-        <button type="button" class="btn-leaf" id="btn-start">▶ 予習してスタート</button>
+        <button type="button" class="btn-leaf" id="btn-start">🎲 全範囲ランダムであそぶ</button>
         <button type="button" class="btn-wood" id="btn-to-stage">🎯 ステージを選んであそぶ</button>
         <button type="button" class="btn-wood" id="btn-to-book">🍂 苦手単語帳を見る</button>
         <p class="book-count" id="book-count"></p>
@@ -2530,6 +2557,16 @@ function rankBadgeEl(en){
 /* 1プレイ分の10語を選ぶ（内部優先順位のみ・画面には理由を出さない）:
    - 期限を過ぎた単語は最も過ぎている順に最大2語まで
    - 残りは未学習の単語を優先し、足りなければ期限が近い順に補充して10語にする */
+/* 忘れかけ（期限到来）の単語を最大2語、期限が古い順に選ぶ。予習リストには出さず、ゲーム中にだけ混ぜる用 */
+function pickDueExtras(levelWords, excludeEns){
+  var now = Date.now();
+  var prog = loadProgress();
+  var overdue = levelWords.filter(function(w){
+    var p = prog[w.en];
+    return p && typeof p.due==="number" && p.due <= now && !excludeEns[w.en];
+  }).sort(function(a,b){ return (prog[a.en].due||0) - (prog[b.en].due||0); });
+  return overdue.slice(0, 2);
+}
 function selectSessionWords(levelWords){
   var total = Math.min(10, levelWords.length);
   if(levelWords.length <= 10) return shuffle(levelWords);
@@ -2915,6 +2952,16 @@ function updateHUD(){
   document.getElementById("hud-score").textContent = game.score;
   document.getElementById("hud-combo").textContent = game.combo;
   updateTreeEmoji();
+  updateComboStage();
+}
+function updateComboStage(){
+  var c = game ? game.combo : 0;
+  var st = c>=50 ? "combo-s4" : c>=20 ? "combo-s3" : c>=10 ? "combo-s2" : c>=5 ? "combo-s1" : "";
+  var stages = ["combo-s1","combo-s2","combo-s3","combo-s4"];
+  var f = document.getElementById("field");
+  if(f){ stages.forEach(function(x){ f.classList.remove(x); }); if(st) f.classList.add(st); }
+  var sg = document.getElementById("screen-game");
+  if(sg){ stages.forEach(function(x){ sg.classList.remove(x); }); if(st) sg.classList.add(st); }
 }
 var comboPopupTimer = null;
 function showComboPopup(){
@@ -3361,7 +3408,14 @@ document.addEventListener("DOMContentLoaded", function(){
   });
   document.getElementById("btn-preview-start").addEventListener("click", function(){
     if(!previewWords.length) showPreview();
-    startGame(previewWords.slice(), currentFallMs());
+    var pool = previewWords.slice();
+    if(stageMode){
+      // ステージの10語は予習リストの通り。忘れかけは予習に出さず、ゲーム中にだけ最大2語を混ぜる
+      var ex = {};
+      pool.forEach(function(w){ ex[w.en]=true; });
+      pool = pool.concat(pickDueExtras(WORDS[selectedLevel], ex));
+    }
+    startGame(pool, currentFallMs());
   });
   document.getElementById("btn-preview-back").addEventListener("click", function(){
     updateBookCount(); show("screen-start");
