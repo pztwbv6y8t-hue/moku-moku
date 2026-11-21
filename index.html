@@ -95,13 +95,13 @@
   .level-btn .sp{display:block; font-size:11px; font-weight:700; opacity:.75; margin-top:2px;}
   .level-btn.sel{background:linear-gradient(180deg,#79c75e,#4da537); color:#fff; border-color:#256b1d; box-shadow:inset 0 2px 0 rgba(255,255,255,.4), 0 3px 0 #256b1d;}
   .speed-row{display:grid; grid-template-columns:repeat(3,1fr); gap:8px;}
-  .speed-btn{
+  .speed-btn, .time-btn{
     border:3px solid var(--bark); border-radius:12px; padding:8px 1px 7px;
     background:linear-gradient(180deg,#caa06a,#b08247); color:#3a2410;
     box-shadow:inset 0 2px 0 rgba(255,255,255,.35), 0 3px 0 var(--bark);
     font-size:14px; font-weight:800; line-height:1.25;
   }
-  .speed-btn.sel{background:linear-gradient(180deg,#79c75e,#4da537); color:#fff; border-color:#256b1d; box-shadow:inset 0 2px 0 rgba(255,255,255,.4), 0 3px 0 #256b1d;}
+  .speed-btn.sel, .time-btn.sel{background:linear-gradient(180deg,#79c75e,#4da537); color:#fff; border-color:#256b1d; box-shadow:inset 0 2px 0 rgba(255,255,255,.4), 0 3px 0 #256b1d;}
   .speed-btn .sp-sec{display:block; font-size:10px; font-weight:700; opacity:.75; margin-top:2px;}
   .stage-note{font-size:13px; font-weight:700; color:#5a4020; line-height:1.5;}
   .stage-grid{display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin-top:10px;}
@@ -270,6 +270,7 @@
         <ul>
           <li>1回 <b>30秒</b>、葉っぱは<b>2枚同時に</b>落ちてくるよ。選択肢は<b>列ごとに3択</b>で、左の葉っぱの答えは左列、右の葉っぱの答えは右列にだけあるよ</li>
           <li>正解 <b>+100点</b>（コンボでボーナス）、ミスは <b>−50点</b> でコンボが0に戻るだけ。ゲームオーバーはないよ</li>
+          <li>コンボが増えるのは、葉っぱが出てから <b>3秒以内</b> に答えたときだけ。ゆっくり正解しても点は入るけど、コンボは増えないよ</li>
           <li>地面に落ちた単語は「苦手単語帳」に残って、例文と発音で復習できるよ</li>
           <li>スタート前に、その回に出る<b>10語の予習リスト</b>が出るよ。単語をタップすると例文と発音が確認できるよ</li>
           <li>単語にはランクがあるよ。別のプレイでもミスなく正解できると、<b>うろ覚え → 覚えた → 完璧</b>と上がっていくよ</li>
@@ -295,6 +296,13 @@
         <button type="button" class="speed-btn" data-speed="0">🐢 ゆっくり<span class="sp-sec">落下 約7.8秒</span></button>
         <button type="button" class="speed-btn sel" data-speed="1">ふつう<span class="sp-sec">落下 約6秒</span></button>
         <button type="button" class="speed-btn" data-speed="2">🐇 はやい<span class="sp-sec">落下 約4.2秒</span></button>
+      </div>
+
+      <p class="sec-label">時間を選ぶ</p>
+      <div class="speed-row" role="group" aria-label="時間選択">
+        <button type="button" class="time-btn sel" data-sec="30">30秒</button>
+        <button type="button" class="time-btn" data-sec="40">40秒</button>
+        <button type="button" class="time-btn" data-sec="50">50秒</button>
       </div>
 
       <div class="start-stack">
@@ -2620,6 +2628,14 @@ var SPEED_STAGES = [1.3, 1.0, 0.7];
 var SPEED_KEY = "moku-moku-speed-v1";
 var selectedSpeed = 1;
 try{ var _ss = parseInt(localStorage.getItem(SPEED_KEY), 10); if(_ss>=0 && _ss<=2) selectedSpeed = _ss; }catch(e){}
+var TIME_KEY = "moku-moku-time-v1";
+var selectedSec = 30;
+try{ var _ts = parseInt(localStorage.getItem(TIME_KEY), 10); if(_ts===30 || _ts===40 || _ts===50) selectedSec = _ts; }catch(e){}
+function updateTimeUI(){
+  document.querySelectorAll(".time-btn").forEach(function(x){ x.classList.toggle("sel", parseInt(x.getAttribute("data-sec"),10)===selectedSec); });
+  var b = document.getElementById("btn-preview-start");
+  if(b) b.textContent = "▶ スタート（" + selectedSec + "秒）";
+}
 function currentFallMs(){ return Math.round(FALL_MS[selectedLevel] * SPEED_STAGES[selectedSpeed]); }
 function fmtSec(ms){ var s = Math.round(ms/100)/10; return (s % 1 === 0) ? String(Math.round(s)) : String(s); }
 function updateSpeedUI(){
@@ -2949,13 +2965,14 @@ function startGame(pool, fallMs){
   show("screen-game");
   hideComboPopup();
   updateHUD();
-  document.getElementById("hud-time").textContent = GAME_SEC;
+  document.getElementById("hud-time").textContent = selectedSec;
   document.getElementById("hud-time").classList.remove("low");
   var fill = document.getElementById("timebar-fill");
   fill.style.width = "100%"; fill.classList.remove("low");
   laneChoicesEls.forEach(function(el){ el.innerHTML=""; });
   fallingEls.forEach(function(el){ el.className="falling hidden"; });
-  game.endAt = Date.now() + GAME_SEC*1000;
+  game.durSec = selectedSec;
+  game.endAt = Date.now() + selectedSec*1000;
   game.timerId = setInterval(tickTimer, 100);
   // 最初の2単語は意味がはっきり違う組み合わせで先に決め、選択肢6つ（正解2+ダミー4）を用意する
   var w0 = pickWord([], []);
@@ -2975,7 +2992,7 @@ function tickTimer(){
   t.textContent = Math.ceil(left);
   t.classList.toggle("low", left<=5.5);
   var fill = document.getElementById("timebar-fill");
-  fill.style.width = (left/GAME_SEC*100) + "%";
+  fill.style.width = (left/(game.durSec || 30)*100) + "%";
   fill.classList.toggle("low", left<=5.5);
   if(left<=0) endGame();
 }
@@ -3088,10 +3105,10 @@ function answerInLane(laneIdx, en, btn){
     if(slot.raf) cancelAnimationFrame(slot.raf);
     // 解決済みのボタンはすぐ無効化し、補充までの間に押されてもペナルティにしない
     if(btn){ btn.classList.add("right"); btn.disabled = true; }
-    game.combo++;
-    game.maxCombo = Math.max(game.maxCombo, game.combo);
+    var fast = slot.elapsed <= 3000;
+    if(fast){ game.combo++; game.maxCombo = Math.max(game.maxCombo, game.combo); }
     var wasGold = !!slot.isGold;
-    var gain = 100 + (game.combo-1)*10;
+    var gain = fast ? (100 + (game.combo-1)*10) : 100;
     if(wasGold) gain = gain * 2;
     game.score += gain;
     game.correct++;
@@ -3329,6 +3346,15 @@ document.addEventListener("DOMContentLoaded", function(){
     });
   });
   updateSpeedUI();
+
+  document.querySelectorAll(".time-btn").forEach(function(b){
+    b.addEventListener("click", function(){
+      selectedSec = parseInt(b.getAttribute("data-sec"), 10);
+      try{ localStorage.setItem(TIME_KEY, String(selectedSec)); }catch(e){}
+      updateTimeUI();
+    });
+  });
+  updateTimeUI();
 
   document.getElementById("btn-start").addEventListener("click", function(){
     showPreview();
