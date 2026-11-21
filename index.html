@@ -94,6 +94,14 @@
   .level-btn .nm{display:block; font-size:13px; font-weight:800; margin-top:1px;}
   .level-btn .sp{display:block; font-size:11px; font-weight:700; opacity:.75; margin-top:2px;}
   .level-btn.sel{background:linear-gradient(180deg,#79c75e,#4da537); color:#fff; border-color:#256b1d; box-shadow:inset 0 2px 0 rgba(255,255,255,.4), 0 3px 0 #256b1d;}
+  .speed-row{display:grid; grid-template-columns:repeat(3,1fr); gap:8px;}
+  .speed-btn{
+    border:3px solid var(--bark); border-radius:12px; padding:8px 1px 7px;
+    background:linear-gradient(180deg,#caa06a,#b08247); color:#3a2410;
+    box-shadow:inset 0 2px 0 rgba(255,255,255,.35), 0 3px 0 var(--bark);
+    font-size:14px; font-weight:800; line-height:1.25;
+  }
+  .speed-btn.sel{background:linear-gradient(180deg,#79c75e,#4da537); color:#fff; border-color:#256b1d; box-shadow:inset 0 2px 0 rgba(255,255,255,.4), 0 3px 0 #256b1d;}
   .start-stack{display:grid; gap:10px; margin-top:16px;}
   .book-count{font-size:13px; font-weight:700; color:#f0dcb2; text-align:center; margin-top:2px;}
 
@@ -273,6 +281,13 @@
         <button type="button" class="level-btn" data-level="3">
           <span class="lv">レベル3</span><span class="nm">差がつく</span><span class="sp">落下 約3.5秒</span>
         </button>
+      </div>
+
+      <p class="sec-label">スピードを選ぶ</p>
+      <div class="speed-row" role="group" aria-label="スピード選択">
+        <button type="button" class="speed-btn" data-speed="0">🐢 ゆっくり</button>
+        <button type="button" class="speed-btn sel" data-speed="1">ふつう</button>
+        <button type="button" class="speed-btn" data-speed="2">🐇 はやい</button>
       </div>
 
       <div class="start-stack">
@@ -2579,6 +2594,20 @@ function show(id){
 
 /* ================= 状態 ================= */
 var selectedLevel = 1;
+var SPEED_STAGES = [1.3, 1.0, 0.7];
+var SPEED_KEY = "moku-moku-speed-v1";
+var selectedSpeed = 1;
+try{ var _ss = parseInt(localStorage.getItem(SPEED_KEY), 10); if(_ss>=0 && _ss<=2) selectedSpeed = _ss; }catch(e){}
+function currentFallMs(){ return Math.round(FALL_MS[selectedLevel] * SPEED_STAGES[selectedSpeed]); }
+function fmtSec(ms){ var s = Math.round(ms/100)/10; return (s % 1 === 0) ? String(Math.round(s)) : String(s); }
+function updateSpeedUI(){
+  document.querySelectorAll(".speed-btn").forEach(function(x){ x.classList.toggle("sel", parseInt(x.getAttribute("data-speed"),10)===selectedSpeed); });
+  document.querySelectorAll(".level-btn").forEach(function(b){
+    var lv = parseInt(b.getAttribute("data-level"), 10);
+    var sp = b.querySelector(".sp");
+    if(sp) sp.textContent = "落下 約" + fmtSec(Math.round(FALL_MS[lv] * SPEED_STAGES[selectedSpeed])) + "秒";
+  });
+}
 var game = null; // {pool, fallMs, score, combo, maxCombo, correct, wrongEn[], current, raf, timerId, endAt, locked, lastEn}
 
 function shuffle(a){
@@ -3240,12 +3269,21 @@ document.addEventListener("DOMContentLoaded", function(){
     });
   });
 
+  document.querySelectorAll(".speed-btn").forEach(function(b){
+    b.addEventListener("click", function(){
+      selectedSpeed = parseInt(b.getAttribute("data-speed"), 10);
+      try{ localStorage.setItem(SPEED_KEY, String(selectedSpeed)); }catch(e){}
+      updateSpeedUI();
+    });
+  });
+  updateSpeedUI();
+
   document.getElementById("btn-start").addEventListener("click", function(){
     showPreview();
   });
   document.getElementById("btn-preview-start").addEventListener("click", function(){
     if(!previewWords.length) showPreview();
-    startGame(previewWords.slice(), FALL_MS[selectedLevel]);
+    startGame(previewWords.slice(), currentFallMs());
   });
   document.getElementById("btn-preview-back").addEventListener("click", function(){
     updateBookCount(); show("screen-start");
@@ -3270,7 +3308,7 @@ document.addEventListener("DOMContentLoaded", function(){
       var extra = shuffle(ALL_WORDS.filter(function(w){ return weak.indexOf(w.en)===-1; })).slice(0, 6-pool.length);
       pool = pool.concat(extra);
     }
-    startGame(pool, FALL_MS[selectedLevel]);
+    startGame(pool, currentFallMs());
   });
   document.getElementById("btn-book-clear").addEventListener("click", function(){
     if(!clearArmed){
