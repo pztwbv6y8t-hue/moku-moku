@@ -102,6 +102,7 @@
     font-size:14px; font-weight:800; line-height:1.25;
   }
   .speed-btn.sel{background:linear-gradient(180deg,#79c75e,#4da537); color:#fff; border-color:#256b1d; box-shadow:inset 0 2px 0 rgba(255,255,255,.4), 0 3px 0 #256b1d;}
+  .speed-btn .sp-sec{display:block; font-size:10px; font-weight:700; opacity:.75; margin-top:2px;}
   .start-stack{display:grid; gap:10px; margin-top:16px;}
   .book-count{font-size:13px; font-weight:700; color:#f0dcb2; text-align:center; margin-top:2px;}
 
@@ -273,21 +274,21 @@
       <p class="sec-label">レベルを選ぶ</p>
       <div class="level-row" role="group" aria-label="レベル選択">
         <button type="button" class="level-btn sel" data-level="1">
-          <span class="lv">レベル1</span><span class="nm">基礎</span><span class="sp">落下 約6秒</span>
+          <span class="lv">レベル1</span><span class="nm">基礎</span>
         </button>
         <button type="button" class="level-btn" data-level="2">
-          <span class="lv">レベル2</span><span class="nm">標準</span><span class="sp">落下 約4.5秒</span>
+          <span class="lv">レベル2</span><span class="nm">標準</span>
         </button>
         <button type="button" class="level-btn" data-level="3">
-          <span class="lv">レベル3</span><span class="nm">差がつく</span><span class="sp">落下 約3.5秒</span>
+          <span class="lv">レベル3</span><span class="nm">差がつく</span>
         </button>
       </div>
 
       <p class="sec-label">スピードを選ぶ</p>
       <div class="speed-row" role="group" aria-label="スピード選択">
-        <button type="button" class="speed-btn" data-speed="0">🐢 ゆっくり</button>
-        <button type="button" class="speed-btn sel" data-speed="1">ふつう</button>
-        <button type="button" class="speed-btn" data-speed="2">🐇 はやい</button>
+        <button type="button" class="speed-btn" data-speed="0">🐢 ゆっくり<span class="sp-sec">落下 約7.8秒</span></button>
+        <button type="button" class="speed-btn sel" data-speed="1">ふつう<span class="sp-sec">落下 約6秒</span></button>
+        <button type="button" class="speed-btn" data-speed="2">🐇 はやい<span class="sp-sec">落下 約4.2秒</span></button>
       </div>
 
       <div class="start-stack">
@@ -2424,7 +2425,7 @@ var WORDS = {
   ]
 };
 var ALL_WORDS = WORDS[1].concat(WORDS[2], WORDS[3]);
-var FALL_MS = {1:6000, 2:4500, 3:3500};
+var FALL_MS = {1:6000, 2:6000, 3:6000};
 var GAME_SEC = 30;
 
 /* ================= 苦手単語帳（端末内 localStorage） ================= */
@@ -2602,11 +2603,6 @@ function currentFallMs(){ return Math.round(FALL_MS[selectedLevel] * SPEED_STAGE
 function fmtSec(ms){ var s = Math.round(ms/100)/10; return (s % 1 === 0) ? String(Math.round(s)) : String(s); }
 function updateSpeedUI(){
   document.querySelectorAll(".speed-btn").forEach(function(x){ x.classList.toggle("sel", parseInt(x.getAttribute("data-speed"),10)===selectedSpeed); });
-  document.querySelectorAll(".level-btn").forEach(function(b){
-    var lv = parseInt(b.getAttribute("data-level"), 10);
-    var sp = b.querySelector(".sp");
-    if(sp) sp.textContent = "落下 約" + fmtSec(Math.round(FALL_MS[lv] * SPEED_STAGES[selectedSpeed])) + "秒";
-  });
 }
 var game = null; // {pool, fallMs, score, combo, maxCombo, correct, wrongEn[], current, raf, timerId, endAt, locked, lastEn}
 
