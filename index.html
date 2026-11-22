@@ -3229,10 +3229,34 @@ function endGame(){
 function speak(en){
   try{
     if(!("speechSynthesis" in window)) return;
-    window.speechSynthesis.cancel();
-    var u = new SpeechSynthesisUtterance(en);
-    u.lang = "en-US"; u.rate = 0.9;
-    window.speechSynthesis.speak(u);
+    var synth = window.speechSynthesis;
+    var spoken = false;
+    var doSpeak = function(){
+      if(spoken) return; spoken = true;
+      try{
+        var u = new SpeechSynthesisUtterance(en);
+        u.lang = "en-US"; u.rate = 0.9;
+        var voices = synth.getVoices();
+        for(var i=0;i<voices.length;i++){
+          if(voices[i].lang && voices[i].lang.toLowerCase().indexOf("en")===0){ u.voice = voices[i]; break; }
+        }
+        if(synth.paused) synth.resume();
+        synth.speak(u);
+      }catch(e){}
+    };
+    var start = function(){
+      // iOSでは cancel の直後に speak すると発話が落ちることがあるため、少し待つ
+      if(synth.speaking || synth.pending){ synth.cancel(); setTimeout(doSpeak, 80); }
+      else doSpeak();
+    };
+    if(synth.getVoices().length===0){
+      // 音声リストの読み込みが終わってから発話する（初回タップで無音になるのを防ぐ）
+      var h = function(){ if(synth.removeEventListener) synth.removeEventListener("voiceschanged", h); start(); };
+      if(synth.addEventListener) synth.addEventListener("voiceschanged", h);
+      setTimeout(function(){ if(synth.removeEventListener) synth.removeEventListener("voiceschanged", h); start(); }, 300);
+    } else {
+      start();
+    }
   }catch(e){}
 }
 function wordItem(w, withBadge){
