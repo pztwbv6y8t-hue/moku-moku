@@ -176,6 +176,17 @@
   .choice.wrong{background:linear-gradient(180deg,#c99a52,#a5762f); color:#fff8ea; border-color:#6d4c14;}
   .quit-row{margin-top:10px; text-align:center;}
   .quit-btn{background:none; border:none; color:#f0dcb2; font-size:14px; font-weight:700; text-decoration:underline; min-height:44px; padding:8px 16px;}
+  /* ---------- 中央コンボ表示と正解バースト ---------- */
+  .combo-big{position:absolute; left:50%; top:44%; transform:translate(-50%,-50%); z-index:3; text-align:center; pointer-events:none;}
+  #combo-big-num{display:block; font-size:72px; font-weight:900; line-height:1; color:#5ad06a; text-shadow:0 3px 0 #1e6b1e, 0 0 22px rgba(110,255,140,.55);}
+  .combo-big-label{display:block; margin-top:2px; font-size:17px; font-weight:900; letter-spacing:.4em; text-indent:.4em; color:#1e6b1e; text-shadow:0 1px 0 rgba(255,255,255,.6);}
+  .combo-big.pop #combo-big-num{animation:comboBigPop .32s ease;}
+  @keyframes comboBigPop{0%{transform:scale(1.45);} 100%{transform:scale(1);}}
+  .burst{position:absolute; z-index:6; width:120px; height:120px; margin:-60px 0 0 -60px; border-radius:50%; pointer-events:none; background:radial-gradient(circle, rgba(255,255,200,.95) 0%, rgba(190,255,150,.55) 38%, rgba(190,255,150,0) 70%); animation:burstPop .5s ease-out forwards;}
+  .burst::after{content:"✦"; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#fff8b0; font-size:30px; text-shadow:0 0 12px rgba(255,220,80,.95);}
+  .burst.gold{background:radial-gradient(circle, rgba(255,244,190,.98) 0%, rgba(255,205,60,.6) 38%, rgba(255,205,60,0) 70%);}
+  @keyframes burstPop{0%{transform:scale(.45); opacity:1;} 100%{transform:scale(1.5); opacity:0;}}
+
   /* ---------- コンボ段階エフェクト ---------- */
   #field{transition:box-shadow .3s ease;}
   #field.combo-s1{box-shadow:0 0 0 3px rgba(255,190,60,.55), inset 0 0 26px rgba(255,190,60,.20);}
@@ -300,6 +311,7 @@
           <li>コンボが増えるのは、葉っぱが出てから <b>3秒以内</b> に答えたときだけ。ゆっくり正解しても点は入るけど、コンボは増えないよ</li>
           <li>地面に落ちた単語は「苦手単語帳」に残って、例文と発音で復習できるよ</li>
           <li>スタート前に、その回に出る<b>10語の予習リスト</b>が出るよ。単語をタップすると例文と発音が確認できるよ</li>
+          <li>発音は、端末のマナーモード（消音）がオンだと聞こえないことがあるよ</li>
           <li>単語にはランクがあるよ。別のプレイでもミスなく正解できると、<b>うろ覚え → 覚えた → 完璧</b>と上がっていくよ</li>
           <li><b>広告なし・ライフなし・回数制限なし</b></li>
         </ul>
@@ -390,6 +402,7 @@
         <i style="width:96px;height:56px;right:20%;top:0;"></i>
         <i style="width:90px;height:56px;right:-14px;top:-4px;background:#4c9440;"></i>
       </div>
+      <div class="combo-big hidden" id="combo-big" aria-hidden="true"><span id="combo-big-num">0</span><span class="combo-big-label">COMBO</span></div>
       <div class="falling hidden" id="falling-0" style="left:25%;">
         <svg class="leaf-svg" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
           <defs>
@@ -2954,6 +2967,18 @@ function updateHUD(){
   updateTreeEmoji();
   updateComboStage();
 }
+function spawnBurst(slot){
+  try{
+    var f = fieldEl; if(!f) return;
+    var b = document.createElement("div");
+    b.className = "burst" + (slot.isGold ? " gold" : "");
+    var cx = f.clientWidth * (slot.idx===0 ? 0.25 : 0.75) + (slot.lastX || 0);
+    var cy = (slot.lastY || 0) + (slot.leafH || 85)/2;
+    b.style.left = cx + "px"; b.style.top = cy + "px";
+    f.appendChild(b);
+    setTimeout(function(){ if(b.parentNode) b.parentNode.removeChild(b); }, 560);
+  }catch(e){}
+}
 function updateComboStage(){
   var c = game ? game.combo : 0;
   var st = c>=50 ? "combo-s4" : c>=20 ? "combo-s3" : c>=10 ? "combo-s2" : c>=5 ? "combo-s1" : "";
@@ -2962,6 +2987,18 @@ function updateComboStage(){
   if(f){ stages.forEach(function(x){ f.classList.remove(x); }); if(st) f.classList.add(st); }
   var sg = document.getElementById("screen-game");
   if(sg){ stages.forEach(function(x){ sg.classList.remove(x); }); if(st) sg.classList.add(st); }
+  var big = document.getElementById("combo-big");
+  if(big){
+    if(c>=2){
+      var num = document.getElementById("combo-big-num");
+      var changed = num && num.textContent !== String(c);
+      if(num) num.textContent = c;
+      big.classList.remove("hidden");
+      if(changed){ big.classList.remove("pop"); void big.offsetWidth; big.classList.add("pop"); }
+    } else {
+      big.classList.add("hidden");
+    }
+  }
 }
 var comboPopupTimer = null;
 function showComboPopup(){
@@ -3123,7 +3160,8 @@ function spawnSlot(idx, presetWord){
       return;
     }
     var y = startY + (endY-startY)*p;
-    slot.el.style.transform = "translate(" + swayX(p, swaySeed) + "px," + y + "px)";
+    slot.lastX = swayX(p, swaySeed); slot.lastY = y;
+    slot.el.style.transform = "translate(" + slot.lastX + "px," + y + "px)";
     slot.raf = requestAnimationFrame(frame);
   }
   function swayX(p, seed){ return Math.sin(p*Math.PI*2 + seed) * 10; }
@@ -3162,6 +3200,7 @@ function answerInLane(laneIdx, en, btn){
     var stOk = sessionStat(slot.word.en);
     if(stOk){ stOk.correctTaps++; stOk.attempts++; }
     setLeafColor(slot, wasGold ? "goldVivid" : "vivid");
+    spawnBurst(slot);
     updateHUD();
     checkComboMilestone();
     checkGoldMilestone(laneIdx);
