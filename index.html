@@ -312,6 +312,24 @@
   #btn-jk-res-ok{width:100%; margin:4px 0 10px;}
   #btn-jk-res-ok:disabled{opacity:.4;}
   .jk-over-text{text-align:center; font-size:22px; font-weight:900; color:#fff3d6; text-shadow:0 1px 0 var(--bark); line-height:1.5; margin:14px 0;}
+  /* Ultimate Janken: casino theme */
+  #screen-janken{font-family:Georgia,"Times New Roman","Hiragino Mincho ProN","Yu Mincho",serif;}
+  #screen-janken .board{background:linear-gradient(180deg,#0e4d33,#093626); border:3px solid #c9a227; box-shadow:inset 0 0 0 2px rgba(0,0,0,.45), inset 0 0 34px rgba(0,0,0,.5), 0 10px 24px rgba(0,0,0,.45);}
+  #screen-janken .screen-title{color:#f3e3a1; text-shadow:0 2px 0 rgba(0,0,0,.6);}
+  #screen-janken .jk-text{color:#f5ead0; text-shadow:0 1px 0 rgba(0,0,0,.6);}
+  #screen-janken .jk-hand-name{color:#f3e3a1; text-shadow:0 1px 0 rgba(0,0,0,.6);}
+  #screen-janken .jk-cnt{color:#f3e3a1; text-shadow:0 1px 0 rgba(0,0,0,.6);}
+  #screen-janken .jk-pick-row button{background:#0a2c1e; border-color:#c9a227; color:#f3e3a1;}
+  #screen-janken .jk-chip{background:linear-gradient(180deg,#2a2a2e,#0c0c0d); border-color:#c9a227; color:#f3e3a1;}
+  #screen-janken .jk-face{border-color:#c9a227; box-shadow:inset 0 0 0 2px rgba(0,0,0,.85), inset 0 0 0 5px rgba(201,162,39,.35), 0 10px 22px rgba(0,0,0,.55);}
+  #screen-janken .jk-back{background:radial-gradient(circle at 50% 42%, #2e2e33, #060607 78%); color:#c9a227;}
+  #screen-janken .jk-front{background:linear-gradient(165deg,#26262b,#0a0a0b);}
+  #screen-janken .jk-count{background:rgba(0,0,0,.5); color:#f3e3a1; border:1px solid #c9a227;}
+  #screen-janken .jk-res-btn{background:linear-gradient(180deg,#123f2c,#0a2c1e); border-color:#c9a227; color:#f3e3a1;}
+  #screen-janken .jk-res-btn.sel{background:linear-gradient(180deg,#f0d878,#c9a227 65%,#a37f14); color:#33270a; border-color:#7a5c10;}
+  #screen-janken .jk-over-text{color:#f3e3a1; text-shadow:0 1px 0 rgba(0,0,0,.6);}
+  #screen-janken .btn-leaf{background:linear-gradient(180deg,#f0d878,#c9a227 60%,#a37f14); border-color:#7a5c10; color:#33270a; box-shadow:inset 0 2px 0 rgba(255,255,255,.55), 0 4px 0 #54400a;}
+  #screen-janken .btn-sub{background:rgba(0,0,0,.28); border-color:#c9a227; color:#f3e3a1;}
 
   .mode-row{display:flex; gap:8px; margin-bottom:12px;}
   .mode-btn{flex:1; border:3px solid var(--bark); border-radius:14px; padding:12px 4px; background:linear-gradient(180deg,#caa06a,#b08247); color:#3a2410; font-size:16px; font-weight:900; cursor:pointer;}
@@ -341,7 +359,7 @@
           <li>スタート前に、その回に出る<b>10語の予習リスト</b>が出るよ。単語をタップすると例文と発音が確認できるよ</li>
           <li>発音は、端末のマナーモード（消音）がオンだと聞こえないことがあるよ</li>
           <li>単語にはランクがあるよ。別のプレイでもミスなく正解できると、<b>うろ覚え → 覚えた → 完璧</b>と上がっていくよ</li>
-          <li>正解数に応じて<b>ジャンケンカード</b>がもらえるよ（30秒は9問につき1枚、40秒は11問、50秒は13問）。結果画面から、友達と対面で遊ぶ<b>究極じゃんけん</b>に行けるよ</li>
+          <li>Your correct answers earn you <b>Janken Cards</b> (1 card per 9 correct in 30s mode, 11 in 40s, 13 in 50s). From the result screen, go to <b>Ultimate Janken</b> and battle a friend face-to-face</li>
           <li><b>広告なし・ライフなし・回数制限なし</b></li>
         </ul>
       </div>
@@ -494,7 +512,7 @@
       <p class="jk-note hidden" id="res-janken-note"></p>
       <div class="stack">
         <button type="button" class="btn-leaf" id="btn-again">↻ もう一度あそぶ</button>
-        <button type="button" class="btn-wood hidden" id="btn-result-janken">究極じゃんけんで対戦する</button>
+        <button type="button" class="btn-wood hidden" id="btn-result-janken">Play Ultimate Janken</button>
         <button type="button" class="btn-wood" id="btn-result-book">🍂 苦手単語帳を見る</button>
         <button type="button" class="btn-sub" id="btn-result-home">スタートに戻る</button>
       </div>
@@ -503,44 +521,44 @@
 
   <!-- ===== 究極じゃんけん ===== -->
   <section id="screen-janken" class="hidden">
-    <h2 class="screen-title">究極じゃんけん</h2>
+    <h2 class="screen-title">Ultimate Janken</h2>
     <div class="board">
       <div id="jk-build">
         <p class="jk-text" id="jk-build-note"></p>
-        <div class="jk-pick-row" data-hand="0"><span class="jk-hand-name">✊ グー</span><button type="button" class="jk-minus">−</button><span class="jk-cnt">0</span><button type="button" class="jk-plus">＋</button></div>
-        <div class="jk-pick-row" data-hand="1"><span class="jk-hand-name">✌️ チョキ</span><button type="button" class="jk-minus">−</button><span class="jk-cnt">0</span><button type="button" class="jk-plus">＋</button></div>
-        <div class="jk-pick-row" data-hand="2"><span class="jk-hand-name">✋ パー</span><button type="button" class="jk-minus">−</button><span class="jk-cnt">0</span><button type="button" class="jk-plus">＋</button></div>
-        <p class="jk-text">残り <span id="jk-build-left">0</span> 枚</p>
+        <div class="jk-pick-row" data-hand="0"><span class="jk-hand-name">✊ Rock</span><button type="button" class="jk-minus">−</button><span class="jk-cnt">0</span><button type="button" class="jk-plus">＋</button></div>
+        <div class="jk-pick-row" data-hand="1"><span class="jk-hand-name">✌️ Scissors</span><button type="button" class="jk-minus">−</button><span class="jk-cnt">0</span><button type="button" class="jk-plus">＋</button></div>
+        <div class="jk-pick-row" data-hand="2"><span class="jk-hand-name">✋ Paper</span><button type="button" class="jk-minus">−</button><span class="jk-cnt">0</span><button type="button" class="jk-plus">＋</button></div>
+        <p class="jk-text"><span id="jk-build-left">0</span> left</p>
         <div class="stack">
-          <button type="button" class="btn-leaf" id="btn-jk-build-ok" disabled>決定</button>
-          <button type="button" class="btn-sub" id="btn-jk-quit1">やめる</button>
+          <button type="button" class="btn-leaf" id="btn-jk-build-ok" disabled>Confirm</button>
+          <button type="button" class="btn-sub" id="btn-jk-quit1">Quit</button>
         </div>
       </div>
       <div id="jk-battle" class="hidden">
-        <p class="jk-text" id="jk-battle-note">どのカードを出しますか？</p>
+        <p class="jk-text" id="jk-battle-note">Choose a card to play</p>
         <div class="jk-hand-list" id="jk-hand-list"></div>
         <div class="jk-stage hidden" id="jk-stage">
           <div class="jk-count" id="jk-count-label"></div>
-          <div class="jk-card" id="jk-card"><div class="jk-card-inner" id="jk-card-inner"><div class="jk-face jk-back">🍃</div><div class="jk-face jk-front" id="jk-card-front">✊</div></div></div>
-          <p class="jk-text" id="jk-stage-note">タップで裏返す</p>
-          <button type="button" class="btn-sub" id="btn-jk-repick">選び直す</button>
+          <div class="jk-card" id="jk-card"><div class="jk-card-inner" id="jk-card-inner"><div class="jk-face jk-back">♦</div><div class="jk-face jk-front" id="jk-card-front">✊</div></div></div>
+          <p class="jk-text" id="jk-stage-note">Tap to flip</p>
+          <button type="button" class="btn-sub" id="btn-jk-repick">Pick Again</button>
         </div>
         <div class="jk-result-btns hidden" id="jk-result-btns">
-          <button type="button" class="jk-res-btn" data-res="win">勝ち</button>
-          <button type="button" class="jk-res-btn" data-res="draw">あいこ</button>
-          <button type="button" class="jk-res-btn" data-res="lose">負け</button>
+          <button type="button" class="jk-res-btn" data-res="win">WIN</button>
+          <button type="button" class="jk-res-btn" data-res="draw">DRAW</button>
+          <button type="button" class="jk-res-btn" data-res="lose">LOSE</button>
         </div>
-        <button type="button" class="btn-leaf hidden" id="btn-jk-res-ok" disabled>決定</button>
+        <button type="button" class="btn-leaf hidden" id="btn-jk-res-ok" disabled>Confirm</button>
         <p class="jk-text" id="jk-msg"></p>
         <div class="stack">
-          <button type="button" class="btn-sub" id="btn-jk-quit2">やめる</button>
+          <button type="button" class="btn-sub" id="btn-jk-quit2">Quit</button>
         </div>
       </div>
       <div id="jk-over" class="hidden">
-        <p class="jk-over-text">カードがなくなった…<br>負け！</p>
+        <p class="jk-over-text">Out of cards...<br>YOU LOSE</p>
         <div class="stack">
-          <button type="button" class="btn-leaf" id="btn-jk-to-result">結果画面に戻る</button>
-          <button type="button" class="btn-sub" id="btn-jk-to-home">スタートに戻る</button>
+          <button type="button" class="btn-leaf" id="btn-jk-to-result">Back to Results</button>
+          <button type="button" class="btn-sub" id="btn-jk-to-home">Back to Start</button>
         </div>
       </div>
     </div>
@@ -3347,7 +3365,7 @@ function endGame(){
   var jkNoteEl = document.getElementById("res-janken-note");
   var jkBtnEl = document.getElementById("btn-result-janken");
   if(jkN > 0){
-    jkNoteEl.textContent = "ジャンケンカードを " + jkN + " 枚ゲット！";
+    jkNoteEl.textContent = "You got " + jkN + " Janken Cards!";
     jkNoteEl.classList.remove("hidden");
     jkBtnEl.classList.remove("hidden");
   } else {
@@ -3371,7 +3389,7 @@ function endGame(){
 
 /* ================= 究極じゃんけん ================= */
 var JK_RATES = {30:9, 40:11, 50:13};
-var JK_HANDS = [{emoji:"✊", name:"グー"}, {emoji:"✌️", name:"チョキ"}, {emoji:"✋", name:"パー"}];
+var JK_HANDS = [{emoji:"✊", name:"Rock"}, {emoji:"✌️", name:"Scissors"}, {emoji:"✋", name:"Paper"}];
 var jk = null;
 function jkEarnedCards(){
   if(!game) return 0;
@@ -3382,7 +3400,7 @@ function jkStart(){
   var earned = jkEarnedCards();
   if(earned <= 0) return;
   jk = { earned: earned, build: [0,0,0], hand: [], played: -1, revealed: false };
-  document.getElementById("jk-build-note").textContent = "ジャンケンカードを " + earned + " 枚選んでね（好きな手の組み合わせでOK）";
+  document.getElementById("jk-build-note").textContent = "Choose " + earned + " cards (any mix of hands)";
   document.getElementById("jk-build").classList.remove("hidden");
   document.getElementById("jk-battle").classList.add("hidden");
   document.getElementById("jk-over").classList.add("hidden");
@@ -3409,7 +3427,7 @@ function jkBuildDone(){
 }
 function jkNextPick(){
   jk.played = -1; jk.revealed = false;
-  document.getElementById("jk-battle-note").textContent = "どのカードを出しますか？（残り " + jk.hand.length + " 枚）";
+  document.getElementById("jk-battle-note").textContent = "Choose a card to play (" + jk.hand.length + " left)";
   document.getElementById("jk-stage").classList.add("hidden");
   document.getElementById("jk-result-btns").classList.add("hidden");
   document.getElementById("btn-jk-res-ok").classList.add("hidden");
@@ -3428,9 +3446,9 @@ function jkPlay(i){
   jk.played = i; jk.revealed = false;
   document.getElementById("jk-card-front").textContent = JK_HANDS[jk.hand[i]].emoji;
   document.getElementById("jk-card-inner").classList.remove("flip");
-  document.getElementById("jk-count-label").textContent = "保有カード：" + (jk.hand.length <= 3 ? "3枚以下" : "4枚以上");
-  document.getElementById("jk-battle-note").textContent = "相手に見せてね";
-  document.getElementById("jk-stage-note").textContent = "タップで裏返す";
+  document.getElementById("jk-count-label").textContent = "Cards: " + (jk.hand.length <= 3 ? "3 or fewer" : "4 or more");
+  document.getElementById("jk-battle-note").textContent = "Show this to your opponent";
+  document.getElementById("jk-stage-note").textContent = "Tap to flip";
   document.getElementById("btn-jk-repick").classList.remove("hidden");
   document.getElementById("jk-hand-list").innerHTML = "";
   document.getElementById("jk-result-btns").classList.add("hidden");
@@ -3442,7 +3460,7 @@ function jkReveal(){
   if(!jk || jk.played < 0 || jk.revealed) return;
   jk.revealed = true;
   document.getElementById("jk-card-inner").classList.add("flip");
-  document.getElementById("jk-stage-note").textContent = JK_HANDS[jk.hand[jk.played]].name + " を出した！ 勝敗を押してね";
+  document.getElementById("jk-stage-note").textContent = "Select the result";
   document.getElementById("btn-jk-repick").classList.add("hidden");
   jk.resSel = null;
   document.querySelectorAll(".jk-res-btn").forEach(function(x){ x.classList.remove("sel"); });
@@ -3461,7 +3479,6 @@ function jkResult(kind){
     return;
   }
   jkNextPick();
-  document.getElementById("jk-msg").textContent = kind === "win" ? "勝ち！そのカードはまだ使えるよ" : (kind === "draw" ? "あいこ…出したカードは両方なくなるよ" : "負け…出したカードはなくなったよ");
 }
 
 /* ================= 単語アイテム（結果・単語帳 共通） ================= */
