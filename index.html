@@ -289,6 +289,36 @@
   @media (prefers-reduced-motion: reduce){
     .leaf-svg{animation:none;}
   }
+
+  .jk-note{text-align:center; font-weight:900; color:#ffe9a8; text-shadow:0 1px 0 var(--bark); margin:0 0 10px; font-size:16px;}
+  .jk-text{text-align:center; font-weight:800; color:#fff3d6; text-shadow:0 1px 0 var(--bark); margin:6px 0 10px;}
+  .jk-pick-row{display:flex; align-items:center; justify-content:center; gap:14px; margin:12px 0;}
+  .jk-hand-name{font-size:22px; font-weight:900; color:#fff3d6; text-shadow:0 1px 0 var(--bark); min-width:104px; text-align:right;}
+  .jk-pick-row button{width:44px; height:44px; border-radius:50%; border:2px solid #e3d3ae; background:#fffdf4; font-size:22px; font-weight:900; color:var(--ink); cursor:pointer;}
+  .jk-pick-row button:disabled{opacity:.35; cursor:default;}
+  .jk-cnt{font-size:24px; font-weight:900; color:#fff3d6; min-width:32px; text-align:center; text-shadow:0 1px 0 var(--bark);}
+  .jk-hand-list{display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-bottom:12px;}
+  .jk-chip{border:2px solid #e3d3ae; background:#fffdf4; border-radius:12px; padding:10px 12px; font-size:17px; font-weight:900; color:var(--ink); cursor:pointer;}
+  .jk-stage{position:relative; text-align:center; padding:20px 0 2px;}
+  .jk-count{position:absolute; top:0; right:0; background:rgba(0,0,0,.35); color:#fff3d6; font-size:12px; font-weight:800; border-radius:999px; padding:4px 10px;}
+  .jk-card{width:170px; height:230px; margin:10px auto 4px; perspective:700px; cursor:pointer;}
+  .jk-card-inner{position:relative; width:100%; height:100%; transform-style:preserve-3d; transition:transform .45s;}
+  .jk-card-inner.flip{transform:rotateY(180deg);}
+  .jk-face{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; border-radius:18px; backface-visibility:hidden; -webkit-backface-visibility:hidden; border:3px solid #e3d3ae;}
+  .jk-back{background:linear-gradient(160deg,#7a4e2a,#4a2c17); font-size:64px;}
+  .jk-front{background:#fffdf4; font-size:84px; transform:rotateY(180deg);}
+  .jk-result-btns{display:flex; gap:8px; justify-content:center; margin:10px 0;}
+  .jk-res-btn{flex:1; max-width:130px; border:3px solid var(--bark); border-radius:14px; padding:11px 4px; background:linear-gradient(180deg,#caa06a,#b08247); color:#3a2410; font-size:16px; font-weight:900; cursor:pointer;}
+  .jk-res-btn.sel{background:linear-gradient(180deg,#79c75e,#4da537); color:#fff; border-color:#256b1d; box-shadow:inset 0 2px 0 rgba(255,255,255,.4), 0 3px 0 #256b1d;}
+  #btn-jk-res-ok{width:100%; margin:4px 0 10px;}
+  #btn-jk-res-ok:disabled{opacity:.4;}
+  .jk-over-text{text-align:center; font-size:22px; font-weight:900; color:#fff3d6; text-shadow:0 1px 0 var(--bark); line-height:1.5; margin:14px 0;}
+
+  .mode-row{display:flex; gap:8px; margin-bottom:12px;}
+  .mode-btn{flex:1; border:3px solid var(--bark); border-radius:14px; padding:12px 4px; background:linear-gradient(180deg,#caa06a,#b08247); color:#3a2410; font-size:16px; font-weight:900; cursor:pointer;}
+  .mode-btn.sel{background:linear-gradient(180deg,#79c75e,#4da537); color:#fff; border-color:#256b1d; box-shadow:inset 0 2px 0 rgba(255,255,255,.4), 0 3px 0 #256b1d;}
+  .play-row{margin-top:20px;}
+  .play-row .btn-leaf{width:100%; font-size:20px; padding:14px;}
 </style>
 </head>
 <body>
@@ -302,7 +332,8 @@
       <p class="tagline">葉っぱが落ちる前に意味を当てよう！</p>
     </div>
     <div class="board">
-      <div class="paper howto">
+      <button type="button" class="btn-sub" id="btn-howto-toggle" style="width:100%; margin-bottom:10px;">遊び方を開く</button>
+      <div class="paper howto hidden" id="howto-box">
         落ちてくる葉っぱの英単語を見て、地面に着く前に
         <b>正しい日本語の意味</b>をタップしよう。
         <ul>
@@ -313,6 +344,7 @@
           <li>スタート前に、その回に出る<b>10語の予習リスト</b>が出るよ。単語をタップすると例文と発音が確認できるよ</li>
           <li>発音は、端末のマナーモード（消音）がオンだと聞こえないことがあるよ</li>
           <li>単語にはランクがあるよ。別のプレイでもミスなく正解できると、<b>うろ覚え → 覚えた → 完璧</b>と上がっていくよ</li>
+          <li>正解数に応じて<b>ジャンケンカード</b>がもらえるよ（30秒は9問につき1枚、40秒は11問、50秒は13問）。結果画面から、友達と対面で遊ぶ<b>究極じゃんけん</b>に行けるよ</li>
           <li><b>広告なし・ライフなし・回数制限なし</b></li>
         </ul>
       </div>
@@ -344,11 +376,19 @@
         <button type="button" class="time-btn" data-sec="50">50秒</button>
       </div>
 
+      <p class="sec-label">モードを選ぶ</p>
+      <div class="mode-row" role="group" aria-label="モード選択">
+        <button type="button" class="mode-btn sel" data-mode="random">全範囲ランダム</button>
+        <button type="button" class="mode-btn" data-mode="stage">ステージを選ぶ</button>
+      </div>
+
       <div class="start-stack">
-        <button type="button" class="btn-leaf" id="btn-start">全範囲ランダムであそぶ</button>
-        <button type="button" class="btn-wood" id="btn-to-stage">ステージを選んであそぶ</button>
         <button type="button" class="btn-wood" id="btn-to-book">🍂 苦手単語帳を見る</button>
         <p class="book-count" id="book-count"></p>
+      </div>
+
+      <div class="play-row">
+        <button type="button" class="btn-leaf" id="btn-play">あそぶ</button>
       </div>
     </div>
   </section>
@@ -454,10 +494,57 @@
       <div class="paper" id="res-wrong-paper" style="padding:14px;">
         <div class="word-list" id="res-wrong-list"></div>
       </div>
+      <p class="jk-note hidden" id="res-janken-note"></p>
       <div class="stack">
         <button type="button" class="btn-leaf" id="btn-again">↻ もう一度あそぶ</button>
+        <button type="button" class="btn-wood hidden" id="btn-result-janken">究極じゃんけんで対戦する</button>
         <button type="button" class="btn-wood" id="btn-result-book">🍂 苦手単語帳を見る</button>
         <button type="button" class="btn-sub" id="btn-result-home">スタートに戻る</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 究極じゃんけん ===== -->
+  <section id="screen-janken" class="hidden">
+    <h2 class="screen-title">究極じゃんけん</h2>
+    <div class="board">
+      <div id="jk-build">
+        <p class="jk-text" id="jk-build-note"></p>
+        <div class="jk-pick-row" data-hand="0"><span class="jk-hand-name">✊ グー</span><button type="button" class="jk-minus">−</button><span class="jk-cnt">0</span><button type="button" class="jk-plus">＋</button></div>
+        <div class="jk-pick-row" data-hand="1"><span class="jk-hand-name">✌️ チョキ</span><button type="button" class="jk-minus">−</button><span class="jk-cnt">0</span><button type="button" class="jk-plus">＋</button></div>
+        <div class="jk-pick-row" data-hand="2"><span class="jk-hand-name">✋ パー</span><button type="button" class="jk-minus">−</button><span class="jk-cnt">0</span><button type="button" class="jk-plus">＋</button></div>
+        <p class="jk-text">残り <span id="jk-build-left">0</span> 枚</p>
+        <div class="stack">
+          <button type="button" class="btn-leaf" id="btn-jk-build-ok" disabled>決定</button>
+          <button type="button" class="btn-sub" id="btn-jk-quit1">やめる</button>
+        </div>
+      </div>
+      <div id="jk-battle" class="hidden">
+        <p class="jk-text" id="jk-battle-note">どのカードを出しますか？</p>
+        <div class="jk-hand-list" id="jk-hand-list"></div>
+        <div class="jk-stage hidden" id="jk-stage">
+          <div class="jk-count" id="jk-count-label"></div>
+          <div class="jk-card" id="jk-card"><div class="jk-card-inner" id="jk-card-inner"><div class="jk-face jk-back">🍃</div><div class="jk-face jk-front" id="jk-card-front">✊</div></div></div>
+          <p class="jk-text" id="jk-stage-note">タップで裏返す</p>
+          <button type="button" class="btn-sub" id="btn-jk-repick">選び直す</button>
+        </div>
+        <div class="jk-result-btns hidden" id="jk-result-btns">
+          <button type="button" class="jk-res-btn" data-res="win">勝ち</button>
+          <button type="button" class="jk-res-btn" data-res="draw">あいこ</button>
+          <button type="button" class="jk-res-btn" data-res="lose">負け</button>
+        </div>
+        <button type="button" class="btn-leaf hidden" id="btn-jk-res-ok" disabled>決定</button>
+        <p class="jk-text" id="jk-msg"></p>
+        <div class="stack">
+          <button type="button" class="btn-sub" id="btn-jk-quit2">やめる</button>
+        </div>
+      </div>
+      <div id="jk-over" class="hidden">
+        <p class="jk-over-text">カードがなくなった…<br>負け！</p>
+        <div class="stack">
+          <button type="button" class="btn-leaf" id="btn-jk-to-result">結果画面に戻る</button>
+          <button type="button" class="btn-sub" id="btn-jk-to-home">スタートに戻る</button>
+        </div>
       </div>
     </div>
   </section>
@@ -2666,7 +2753,7 @@ function applyPlayResults(stats){
 }
 
 /* ================= 画面切り替え ================= */
-var screens = ["screen-start","screen-preview","screen-game","screen-result","screen-book","screen-stage"];
+var screens = ["screen-start","screen-preview","screen-game","screen-result","screen-book","screen-stage","screen-janken"];
 function show(id){
   screens.forEach(function(s){ document.getElementById(s).classList.toggle("hidden", s!==id); });
   window.scrollTo(0,0);
@@ -2674,6 +2761,12 @@ function show(id){
 
 /* ================= 状態 ================= */
 var selectedLevel = 1;
+var MODE_KEY = "moku-moku-mode-v1";
+var selectedMode = "random";
+try{ var _md = localStorage.getItem(MODE_KEY); if(_md === "stage" || _md === "random") selectedMode = _md; }catch(e){}
+function updateModeUI(){
+  document.querySelectorAll(".mode-btn").forEach(function(x){ x.classList.toggle("sel", x.getAttribute("data-mode") === selectedMode); });
+}
 var SPEED_STAGES = [1.3, 1.0, 0.7];
 var SPEED_KEY = "moku-moku-speed-v1";
 var selectedSpeed = 1;
@@ -3253,6 +3346,17 @@ function endGame(){
   document.getElementById("res-score").textContent = game.score;
   document.getElementById("res-correct").textContent = game.correct;
   document.getElementById("res-combo").textContent = game.maxCombo;
+  var jkN = jkEarnedCards();
+  var jkNoteEl = document.getElementById("res-janken-note");
+  var jkBtnEl = document.getElementById("btn-result-janken");
+  if(jkN > 0){
+    jkNoteEl.textContent = "ジャンケンカードを " + jkN + " 枚ゲット！";
+    jkNoteEl.classList.remove("hidden");
+    jkBtnEl.classList.remove("hidden");
+  } else {
+    jkNoteEl.classList.add("hidden");
+    jkBtnEl.classList.add("hidden");
+  }
   var treeSt = treeStageFor(game.maxCombo);
   var resTree = document.getElementById("res-tree");
   if(resTree){ resTree.textContent = treeSt.resultEmoji; resTree.className = "result-tree " + treeSt.cls; }
@@ -3266,6 +3370,101 @@ function endGame(){
     if(w) list.appendChild(wordItem(w));
   });
   show("screen-result");
+}
+
+/* ================= 究極じゃんけん ================= */
+var JK_RATES = {30:9, 40:11, 50:13};
+var JK_HANDS = [{emoji:"✊", name:"グー"}, {emoji:"✌️", name:"チョキ"}, {emoji:"✋", name:"パー"}];
+var jk = null;
+function jkEarnedCards(){
+  if(!game) return 0;
+  var rate = JK_RATES[game.durSec] || 9;
+  return Math.floor(game.correct / rate);
+}
+function jkStart(){
+  var earned = jkEarnedCards();
+  if(earned <= 0) return;
+  jk = { earned: earned, build: [0,0,0], hand: [], played: -1, revealed: false };
+  document.getElementById("jk-build-note").textContent = "ジャンケンカードを " + earned + " 枚選んでね（好きな手の組み合わせでOK）";
+  document.getElementById("jk-build").classList.remove("hidden");
+  document.getElementById("jk-battle").classList.add("hidden");
+  document.getElementById("jk-over").classList.add("hidden");
+  jkRenderBuild();
+  show("screen-janken");
+}
+function jkBuildLeft(){ return jk.earned - (jk.build[0] + jk.build[1] + jk.build[2]); }
+function jkRenderBuild(){
+  document.querySelectorAll(".jk-pick-row").forEach(function(row){
+    var h = parseInt(row.getAttribute("data-hand"), 10);
+    row.querySelector(".jk-cnt").textContent = jk.build[h];
+    row.querySelector(".jk-plus").disabled = jkBuildLeft() <= 0;
+    row.querySelector(".jk-minus").disabled = jk.build[h] <= 0;
+  });
+  document.getElementById("jk-build-left").textContent = jkBuildLeft();
+  document.getElementById("btn-jk-build-ok").disabled = jkBuildLeft() !== 0;
+}
+function jkBuildDone(){
+  jk.hand = [];
+  jk.build.forEach(function(n, h){ for(var i = 0; i < n; i++) jk.hand.push(h); });
+  document.getElementById("jk-build").classList.add("hidden");
+  document.getElementById("jk-battle").classList.remove("hidden");
+  jkNextPick();
+}
+function jkNextPick(){
+  jk.played = -1; jk.revealed = false;
+  document.getElementById("jk-battle-note").textContent = "どのカードを出しますか？（残り " + jk.hand.length + " 枚）";
+  document.getElementById("jk-stage").classList.add("hidden");
+  document.getElementById("jk-result-btns").classList.add("hidden");
+  document.getElementById("btn-jk-res-ok").classList.add("hidden");
+  document.getElementById("jk-msg").textContent = "";
+  var list = document.getElementById("jk-hand-list");
+  list.innerHTML = "";
+  jk.hand.forEach(function(h, i){
+    var b = document.createElement("button");
+    b.type = "button"; b.className = "jk-chip";
+    b.textContent = JK_HANDS[h].emoji + " " + JK_HANDS[h].name;
+    b.addEventListener("click", function(){ jkPlay(i); });
+    list.appendChild(b);
+  });
+}
+function jkPlay(i){
+  jk.played = i; jk.revealed = false;
+  document.getElementById("jk-card-front").textContent = JK_HANDS[jk.hand[i]].emoji;
+  document.getElementById("jk-card-inner").classList.remove("flip");
+  document.getElementById("jk-count-label").textContent = "保有カード：" + (jk.hand.length <= 3 ? "3枚以下" : "4枚以上");
+  document.getElementById("jk-battle-note").textContent = "相手に見せてね";
+  document.getElementById("jk-stage-note").textContent = "タップで裏返す";
+  document.getElementById("btn-jk-repick").classList.remove("hidden");
+  document.getElementById("jk-hand-list").innerHTML = "";
+  document.getElementById("jk-result-btns").classList.add("hidden");
+  document.getElementById("btn-jk-res-ok").classList.add("hidden");
+  document.getElementById("jk-msg").textContent = "";
+  document.getElementById("jk-stage").classList.remove("hidden");
+}
+function jkReveal(){
+  if(!jk || jk.played < 0 || jk.revealed) return;
+  jk.revealed = true;
+  document.getElementById("jk-card-inner").classList.add("flip");
+  document.getElementById("jk-stage-note").textContent = JK_HANDS[jk.hand[jk.played]].name + " を出した！ 勝敗を押してね";
+  document.getElementById("btn-jk-repick").classList.add("hidden");
+  jk.resSel = null;
+  document.querySelectorAll(".jk-res-btn").forEach(function(x){ x.classList.remove("sel"); });
+  var okBtn = document.getElementById("btn-jk-res-ok");
+  okBtn.disabled = true;
+  okBtn.classList.remove("hidden");
+  document.getElementById("jk-result-btns").classList.remove("hidden");
+}
+function jkResult(kind){
+  if(!jk || jk.played < 0) return;
+  if(kind !== "win") jk.hand.splice(jk.played, 1);
+  jk.played = -1;
+  if(jk.hand.length === 0){
+    document.getElementById("jk-battle").classList.add("hidden");
+    document.getElementById("jk-over").classList.remove("hidden");
+    return;
+  }
+  jkNextPick();
+  document.getElementById("jk-msg").textContent = kind === "win" ? "勝ち！そのカードはまだ使えるよ" : (kind === "draw" ? "あいこ…出したカードは両方なくなるよ" : "負け…出したカードはなくなったよ");
 }
 
 /* ================= 単語アイテム（結果・単語帳 共通） ================= */
@@ -3470,8 +3669,16 @@ document.addEventListener("DOMContentLoaded", function(){
   });
   updateTimeUI();
 
-  document.getElementById("btn-start").addEventListener("click", function(){
-    showPreview();
+  document.querySelectorAll(".mode-btn").forEach(function(b){
+    b.addEventListener("click", function(){
+      selectedMode = b.getAttribute("data-mode");
+      try{ localStorage.setItem(MODE_KEY, selectedMode); }catch(e){}
+      updateModeUI();
+    });
+  });
+  updateModeUI();
+  document.getElementById("btn-play").addEventListener("click", function(){
+    if(selectedMode === "stage"){ showStageSelect(); } else { showPreview(); }
   });
   document.getElementById("btn-preview-start").addEventListener("click", function(){
     if(!previewWords.length) showPreview();
@@ -3488,7 +3695,7 @@ document.addEventListener("DOMContentLoaded", function(){
     updateBookCount(); show("screen-start");
   });
   document.getElementById("btn-to-book").addEventListener("click", function(){ renderBook(); show("screen-book"); });
-  document.getElementById("btn-to-stage").addEventListener("click", function(){ showStageSelect(); });
+
   document.getElementById("btn-stage-back").addEventListener("click", function(){ updateBookCount(); show("screen-start"); });
   document.getElementById("btn-quit").addEventListener("click", function(){
     if(game){ game.ended = true; stopLoops(); }
@@ -3503,6 +3710,34 @@ document.addEventListener("DOMContentLoaded", function(){
   });
   document.getElementById("btn-result-book").addEventListener("click", function(){ renderBook(); show("screen-book"); });
   document.getElementById("btn-result-home").addEventListener("click", function(){ updateBookCount(); show("screen-start"); });
+  document.getElementById("btn-howto-toggle").addEventListener("click", function(){
+    var box = document.getElementById("howto-box");
+    var nowHidden = box.classList.toggle("hidden");
+    this.textContent = nowHidden ? "遊び方を開く" : "遊び方を閉じる";
+  });
+  document.getElementById("btn-result-janken").addEventListener("click", function(){ jkStart(); });
+  document.querySelectorAll(".jk-pick-row").forEach(function(row){
+    var h = parseInt(row.getAttribute("data-hand"), 10);
+    row.querySelector(".jk-plus").addEventListener("click", function(){ if(jk && jkBuildLeft() > 0){ jk.build[h]++; jkRenderBuild(); } });
+    row.querySelector(".jk-minus").addEventListener("click", function(){ if(jk && jk.build[h] > 0){ jk.build[h]--; jkRenderBuild(); } });
+  });
+  document.getElementById("btn-jk-build-ok").addEventListener("click", function(){ if(jk) jkBuildDone(); });
+  document.getElementById("jk-card").addEventListener("click", function(){ jkReveal(); });
+  document.getElementById("btn-jk-repick").addEventListener("click", function(){ if(jk) jkNextPick(); });
+  document.querySelectorAll(".jk-res-btn").forEach(function(b){
+    b.addEventListener("click", function(){
+      if(!jk) return;
+      jk.resSel = b.getAttribute("data-res");
+      document.querySelectorAll(".jk-res-btn").forEach(function(x){ x.classList.toggle("sel", x === b); });
+      document.getElementById("btn-jk-res-ok").disabled = false;
+    });
+  });
+  document.getElementById("btn-jk-res-ok").addEventListener("click", function(){ if(jk && jk.resSel) jkResult(jk.resSel); });
+  var jkQuit = function(){ show("screen-result"); };
+  document.getElementById("btn-jk-quit1").addEventListener("click", jkQuit);
+  document.getElementById("btn-jk-quit2").addEventListener("click", jkQuit);
+  document.getElementById("btn-jk-to-result").addEventListener("click", jkQuit);
+  document.getElementById("btn-jk-to-home").addEventListener("click", function(){ updateBookCount(); show("screen-start"); });
   document.getElementById("btn-book-home").addEventListener("click", function(){ updateBookCount(); show("screen-start"); });
   document.getElementById("btn-book-quiz").addEventListener("click", function(){
     var weak = loadWeak();
