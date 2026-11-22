@@ -2979,6 +2979,7 @@ function spawnBurst(slot){
     setTimeout(function(){ if(b.parentNode) b.parentNode.removeChild(b); }, 560);
   }catch(e){}
 }
+function hideComboBig(){ var big = document.getElementById("combo-big"); if(big) big.classList.add("hidden"); }
 function updateComboStage(){
   var c = game ? game.combo : 0;
   var st = c>=50 ? "combo-s4" : c>=20 ? "combo-s3" : c>=10 ? "combo-s2" : c>=5 ? "combo-s1" : "";
@@ -3217,6 +3218,7 @@ function answerInLane(laneIdx, en, btn){
     game.score -= 50;
     game.combo = 0;
     resetComboMilestone();
+    hideComboBig();
     if(btn){ btn.classList.add("wrong"); btn.disabled = true; }
     updateHUD();
   }
@@ -3232,6 +3234,7 @@ function onMissSlot(slot){
   game.score -= 50;
   game.combo = 0;
   resetComboMilestone();
+  hideComboBig();
   if(word){ recordWrong(word.en); var stMiss = sessionStat(word.en); if(stMiss){ stMiss.failed = true; } }
   setLeafColor(slot, "wither");
   slot.el.classList.add("withered");
@@ -3243,6 +3246,7 @@ function onMissSlot(slot){
 function endGame(){
   if(!game || game.ended) return;
   game.ended = true;
+  hideComboBig();
   stopLoops();
   // ランクはプレイ単位で、ここで一括更新する（途中でやめた場合は更新しない）
   if(!game.resultsApplied){ game.resultsApplied = true; applyPlayResults(game.sessionStats); }
