@@ -320,9 +320,9 @@
 
       <p class="sec-label">スピードを選ぶ</p>
       <div class="speed-row" role="group" aria-label="スピード選択">
-        <button type="button" class="speed-btn" data-speed="0">🐢 ゆっくり<span class="sp-sec">落下 約7.8秒</span></button>
+        <button type="button" class="speed-btn" data-speed="0">ゆっくり<span class="sp-sec">落下 約7.8秒</span></button>
         <button type="button" class="speed-btn sel" data-speed="1">ふつう<span class="sp-sec">落下 約6秒</span></button>
-        <button type="button" class="speed-btn" data-speed="2">🐇 はやい<span class="sp-sec">落下 約4.2秒</span></button>
+        <button type="button" class="speed-btn" data-speed="2">はやい<span class="sp-sec">落下 約4.2秒</span></button>
       </div>
 
       <p class="sec-label">時間を選ぶ</p>
@@ -333,8 +333,8 @@
       </div>
 
       <div class="start-stack">
-        <button type="button" class="btn-leaf" id="btn-start">🎲 全範囲ランダムであそぶ</button>
-        <button type="button" class="btn-wood" id="btn-to-stage">🎯 ステージを選んであそぶ</button>
+        <button type="button" class="btn-leaf" id="btn-start">全範囲ランダムであそぶ</button>
+        <button type="button" class="btn-wood" id="btn-to-stage">ステージを選んであそぶ</button>
         <button type="button" class="btn-wood" id="btn-to-book">🍂 苦手単語帳を見る</button>
         <p class="book-count" id="book-count"></p>
       </div>
@@ -361,7 +361,7 @@
 
   <!-- ===== ステージ選択画面 ===== -->
   <section id="screen-stage" class="hidden">
-    <h2 class="screen-title" id="stage-title">🎯 ステージを選ぶ</h2>
+    <h2 class="screen-title" id="stage-title">ステージを選ぶ</h2>
     <div class="board">
       <div class="paper" style="padding:14px;">
         <p class="stage-note">10語ずつのステージだよ。同じステージは何回でもあそべるよ。下の数字は「うろ覚え以上になった単語の数」だよ。</p>
@@ -3325,7 +3325,7 @@ function showPreview(fixedWords, titleText){
 }
 function showStageSelect(){
   var title = document.getElementById("stage-title");
-  if(title) title.textContent = "🎯 ステージを選ぶ（レベル" + selectedLevel + "）";
+  if(title) title.textContent = "ステージを選ぶ（レベル" + selectedLevel + "）";
   var grid = document.getElementById("stage-grid");
   grid.innerHTML = "";
   var prog = loadProgress();
