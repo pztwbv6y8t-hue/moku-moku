@@ -574,8 +574,16 @@
       </div>
       <div class="stack">
         <button type="button" class="btn-leaf" id="btn-book-quiz">🍃 苦手単語だけで再クイズ（30秒）</button>
+        <button type="button" class="btn-sub btn-danger" id="btn-book-del-sel" disabled>選択した単語を消す</button>
         <button type="button" class="btn-sub btn-danger" id="btn-book-clear">単語帳を空にする</button>
         <button type="button" class="btn-sub" id="btn-book-home">スタートに戻る</button>
+      </div>
+      <div class="hidden" id="book-del-confirm">
+        <p class="empty-note" id="book-del-confirm-text" style="color:#ffc9a8; text-shadow:0 1px 0 rgba(0,0,0,.3); text-align:center; margin:10px 0 8px;">本当に消す？</p>
+        <div style="display:flex; gap:10px;">
+          <button type="button" class="btn-sub btn-danger" id="btn-book-del-yes" style="flex:1;">Yes</button>
+          <button type="button" class="btn-sub" id="btn-book-del-no" style="flex:1;">No</button>
+        </div>
       </div>
       <p class="empty-note hidden" id="book-confirm" style="color:#ffc9a8; text-shadow:0 1px 0 rgba(0,0,0,.3);"></p>
     </div>
@@ -3638,14 +3646,46 @@ function showStageSelect(){
 
 /* ================= 単語帳画面 ================= */
 var clearArmed = false;
+var bookSelected = {};
+function updateDelSelBtn(){
+  var n = Object.keys(bookSelected).filter(function(en){ return bookSelected[en]; }).length;
+  var btn = document.getElementById("btn-book-del-sel");
+  if(!btn) return;
+  btn.disabled = n === 0;
+  btn.textContent = "選択した単語を消す" + (n ? "（" + n + "語）" : "");
+  if(n === 0) document.getElementById("book-del-confirm").classList.add("hidden");
+}
 function renderBook(){
   var weak = loadWeak();
+  bookSelected = {};
+  document.getElementById("book-del-confirm").classList.add("hidden");
   var list = document.getElementById("book-list");
   list.innerHTML = "";
-  weak.forEach(function(en){ var w = findWord(en); if(w) list.appendChild(wordItem(w, true)); });
+  weak.forEach(function(en){
+    var w = findWord(en); if(!w) return;
+    var row = document.createElement("div");
+    row.style.display = "flex"; row.style.alignItems = "stretch"; row.style.gap = "8px";
+    var check = document.createElement("button");
+    check.type = "button"; check.className = "check-btn"; check.textContent = "✓";
+    check.setAttribute("aria-label", w.en + " を選択");
+    check.setAttribute("aria-pressed", "false");
+    check.style.margin = "6px 0"; check.style.alignSelf = "center";
+    check.addEventListener("click", function(){
+      bookSelected[en] = !bookSelected[en];
+      check.classList.toggle("checked", !!bookSelected[en]);
+      check.setAttribute("aria-pressed", bookSelected[en] ? "true" : "false");
+      document.getElementById("book-del-confirm").classList.add("hidden");
+      updateDelSelBtn();
+    });
+    var item = wordItem(w, true); item.style.flex = "1";
+    row.appendChild(check); row.appendChild(item);
+    list.appendChild(row);
+  });
   document.getElementById("book-empty").classList.toggle("hidden", weak.length>0);
   document.getElementById("btn-book-quiz").style.display = weak.length ? "" : "none";
+  document.getElementById("btn-book-del-sel").style.display = weak.length ? "" : "none";
   document.getElementById("btn-book-clear").style.display = weak.length ? "" : "none";
+  updateDelSelBtn();
   clearArmed = false;
   document.getElementById("btn-book-clear").textContent = "単語帳を空にする";
   document.getElementById("book-confirm").classList.add("hidden");
@@ -3769,6 +3809,20 @@ document.addEventListener("DOMContentLoaded", function(){
     }
     startGame(pool, currentFallMs());
   });
+  document.getElementById("btn-book-del-sel").addEventListener("click", function(){
+    var sel = Object.keys(bookSelected).filter(function(en){ return bookSelected[en]; });
+    if(!sel.length) return;
+    document.getElementById("book-del-confirm-text").textContent = "本当に消す？（" + sel.length + "語）";
+    document.getElementById("book-del-confirm").classList.remove("hidden");
+  });
+  document.getElementById("btn-book-del-yes").addEventListener("click", function(){
+    saveWeak(loadWeak().filter(function(en){ return !bookSelected[en]; }));
+    renderBook();
+  });
+  document.getElementById("btn-book-del-no").addEventListener("click", function(){
+    document.getElementById("book-del-confirm").classList.add("hidden");
+  });
+
   document.getElementById("btn-book-clear").addEventListener("click", function(){
     if(!clearArmed){
       clearArmed = true;
