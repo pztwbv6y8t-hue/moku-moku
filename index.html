@@ -247,9 +247,9 @@
   .result-box .v{display:block; font-size:26px; font-weight:900;}
   .word-list{display:grid; gap:8px;}
   .word-item{border:2px solid #e0cfa5; border-radius:12px; background:#fffdf4; overflow:hidden;}
-  .word-head{display:flex; align-items:center; gap:8px; width:100%; background:none; border:none; text-align:left; padding:12px 14px; min-height:52px;}
+  .word-head{display:flex; align-items:center; flex-wrap:wrap; gap:2px 8px; width:100%; background:none; border:none; text-align:left; padding:12px 14px; min-height:52px;}
   .word-head .en{font-size:19px; font-weight:900; color:var(--ink);}
-  .word-head .ja{font-size:14px; font-weight:700; color:var(--ink-soft); margin-left:auto; text-align:right;}
+  .word-head .ja{font-size:14px; font-weight:700; color:var(--ink-soft); flex:1 1 100%; text-align:left;}
   .word-detail{padding:0 14px 14px; font-size:14px; line-height:1.7; display:none;}
   .word-item.open .word-detail{display:block;}
   .word-detail .ex{margin-top:6px; background:#eef7e2; border-radius:10px; padding:10px 12px;}
