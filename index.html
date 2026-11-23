@@ -284,6 +284,8 @@
     font-size:22px; font-weight:900; line-height:1; display:flex; align-items:center; justify-content:center; padding:0;
   }
   .check-btn.checked{border-color:#2e7d24; background:#4da537; color:#fff;}
+  .word-head .frac{margin-left:auto; font-weight:900; font-size:13px; color:#5a4020; background:rgba(255,255,255,.55); border-radius:999px; padding:2px 8px;}
+  .word-head .frac.bad{color:#b3402a; background:rgba(179,64,42,.14);}
   .preview-item.checked-item{border-color:#7cb964; background:#f4faec;}
   @media (prefers-reduced-motion: reduce){
     .leaf-svg{animation:none;}
@@ -3351,7 +3353,7 @@ function onMissSlot(slot){
   game.combo = 0;
   resetComboMilestone();
   hideComboBig();
-  if(word){ recordWrong(word.en); var stMiss = sessionStat(word.en); if(stMiss){ stMiss.failed = true; } }
+  if(word){ recordWrong(word.en); var stMiss = sessionStat(word.en); if(stMiss){ stMiss.attempts++; stMiss.failed = true; } }
   setLeafColor(slot, "wither");
   slot.el.classList.add("withered");
   updateHUD();
@@ -3387,10 +3389,13 @@ function endGame(){
   if(resTreeName){ resTreeName.textContent = treeSt.name; }
   var list = document.getElementById("res-wrong-list");
   list.innerHTML = "";
-  document.getElementById("res-wrong-paper").classList.toggle("hidden", game.wrongEn.length===0);
-  game.wrongEn.forEach(function(en){
+  var stats = game.sessionStats || {};
+  var ens = Object.keys(stats);
+  ens.sort(function(a, b){ return (stats[a].failed ? 0 : 1) - (stats[b].failed ? 0 : 1); });
+  document.getElementById("res-wrong-paper").classList.toggle("hidden", ens.length===0);
+  ens.forEach(function(en){
     var w = findWord(en);
-    if(w) list.appendChild(wordItem(w));
+    if(w) list.appendChild(resultItem(w, stats[en]));
   });
   show("screen-result");
 }
@@ -3600,6 +3605,51 @@ function previewItem(w){
     check.setAttribute("aria-pressed", nowWeak ? "true" : "false");
     wrap.classList.toggle("checked-item", nowWeak);
     updatePreviewCount();
+  });
+  headRow.appendChild(check); headRow.appendChild(head);
+  wrap.appendChild(headRow); wrap.appendChild(detail);
+  return wrap;
+}
+function resultItem(w, st){
+  var wrap = document.createElement("div");
+  wrap.className = "word-item preview-item";
+  var headRow = document.createElement("div");
+  headRow.style.display = "flex"; headRow.style.alignItems = "stretch";
+  var check = document.createElement("button");
+  check.type = "button"; check.className = "check-btn"; check.textContent = "\u2713";
+  check.setAttribute("aria-label", w.en + " \u3092\u82e6\u624b\u5358\u8a9e\u306b\u767b\u9332");
+  check.style.margin = "6px 0 6px 8px"; check.style.alignSelf = "center";
+  var head = document.createElement("button");
+  head.type = "button"; head.className = "word-head"; head.style.flex = "1";
+  var enS = document.createElement("span"); enS.className="en"; enS.textContent = w.en;
+  var jaS = document.createElement("span"); jaS.className="ja"; jaS.textContent = w.ja;
+  var frac = document.createElement("span"); frac.className = "frac" + (st.failed ? " bad" : "");
+  frac.textContent = st.correctTaps + "/" + st.attempts;
+  head.appendChild(enS); head.appendChild(rankBadgeEl(w.en)); head.appendChild(jaS); head.appendChild(frac);
+  var detail = document.createElement("div");
+  detail.className = "word-detail";
+  var ex = document.createElement("div"); ex.className = "ex";
+  var exEn = document.createElement("div"); exEn.className="en-s"; exEn.textContent = w.ex;
+  var exJa = document.createElement("div"); exJa.className="ja-s"; exJa.textContent = w.exja;
+  ex.appendChild(exEn); ex.appendChild(exJa);
+  var sp = document.createElement("button");
+  sp.type="button"; sp.className="speak-btn"; sp.textContent = "\U0001f50a \u767a\u97f3\u3092\u805e\u304f";
+  sp.addEventListener("click", function(ev){ ev.stopPropagation(); speak(w.en); });
+  detail.appendChild(ex); detail.appendChild(sp);
+  head.addEventListener("click", function(){ wrap.classList.toggle("open"); });
+  var initiallyWeak = loadWeak().indexOf(w.en) !== -1;
+  check.classList.toggle("checked", initiallyWeak);
+  check.setAttribute("aria-pressed", initiallyWeak ? "true" : "false");
+  if(initiallyWeak) wrap.classList.add("checked-item");
+  check.addEventListener("click", function(){
+    var weak = loadWeak();
+    var idx = weak.indexOf(w.en);
+    var nowWeak;
+    if(idx === -1){ weak.push(w.en); nowWeak = true; } else { weak.splice(idx, 1); nowWeak = false; }
+    saveWeak(weak);
+    check.classList.toggle("checked", nowWeak);
+    check.setAttribute("aria-pressed", nowWeak ? "true" : "false");
+    wrap.classList.toggle("checked-item", nowWeak);
   });
   headRow.appendChild(check); headRow.appendChild(head);
   wrap.appendChild(headRow); wrap.appendChild(detail);
