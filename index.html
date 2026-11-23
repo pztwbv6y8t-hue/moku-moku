@@ -359,7 +359,7 @@
           <li>スタート前に、その回に出る<b>10語の予習リスト</b>が出るよ。単語をタップすると例文と発音が確認できるよ</li>
           <li>発音は、端末のマナーモード（消音）がオンだと聞こえないことがあるよ</li>
           <li>単語にはランクがあるよ。別のプレイでもミスなく正解できると、<b>うろ覚え → 覚えた → 完璧</b>と上がっていくよ</li>
-          <li>Your correct answers earn you <b>Janken Cards</b> (1 card per 9 correct in 30s mode, 11 in 40s, 13 in 50s). From the result screen, go to <b>Ultimate Janken</b> and battle a friend face-to-face</li>
+          <li>Your score earns you <b>Janken Cards</b> (1 card for every 600 points). From the result screen, go to <b>Ultimate Janken</b> and battle a friend face-to-face</li>
           <li><b>広告なし・ライフなし・回数制限なし</b></li>
         </ul>
       </div>
@@ -3388,13 +3388,11 @@ function endGame(){
 }
 
 /* ================= 究極じゃんけん ================= */
-var JK_RATES = {30:9, 40:11, 50:13};
 var JK_HANDS = [{emoji:"✊", name:"Rock"}, {emoji:"✌️", name:"Scissors"}, {emoji:"✋", name:"Paper"}];
 var jk = null;
 function jkEarnedCards(){
   if(!game) return 0;
-  var rate = JK_RATES[game.durSec] || 9;
-  return Math.floor(game.correct / rate);
+  return Math.max(0, Math.floor(game.score / 600));
 }
 function jkStart(){
   var earned = jkEarnedCards();
