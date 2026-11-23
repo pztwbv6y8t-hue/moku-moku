@@ -148,9 +148,9 @@
     position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
     padding:0 6px 4px; text-align:center; pointer-events:none; overflow:visible;
   }
-  .leaf-word span{font-weight:900; color:#173d10; line-height:1.1; white-space:nowrap; word-break:normal; overflow-wrap:normal; text-shadow:0 1px 0 rgba(255,255,255,.45);}
+  .leaf-word span{font-weight:900; color:#ffffff; line-height:1.1; white-space:nowrap; word-break:normal; overflow-wrap:normal; text-shadow:0 1px 3px rgba(0,0,0,.6), 0 0 6px rgba(0,0,0,.3);}
   .falling.correct .leaf-svg{animation:none;}
-  .falling.gold .leaf-word span{color:#4d2e00; text-shadow:0 1px 0 rgba(255,255,255,.65);}
+  .falling.gold .leaf-word span{color:#ffffff; text-shadow:0 1px 3px rgba(90,55,0,.85), 0 0 6px rgba(90,55,0,.45);}
   .falling.withered .leaf-svg{animation:none; transform:scale(.82) rotate(9deg);}
   .falling.fadeout{opacity:0; transition:opacity .25s ease-out;}
   .field-lane{position:absolute; top:0; bottom:0; width:50%; z-index:1; pointer-events:none;}
@@ -414,8 +414,8 @@
     <div class="board">
       <div class="paper" style="padding:14px;">
         <div class="preview-top">
-          <span class="preview-count" id="preview-count">チェック 0/10</span>
-          <span class="preview-note">単語をタップで例文・発音<br>○ボタンでチェック</span>
+          <span class="preview-count" id="preview-count">苦手登録 0/10</span>
+          <span class="preview-note">単語をタップで例文・発音<br>✓ボタンで苦手単語に登録</span>
         </div>
         <div class="word-list" id="preview-list"></div>
       </div>
@@ -3546,11 +3546,11 @@ var currentStage = 0;
 var STAGE_SIZE = 10;
 function stageWords(level, stage){ return WORDS[level].slice((stage-1)*STAGE_SIZE, stage*STAGE_SIZE); }
 function stageCount(level){ return Math.ceil(WORDS[level].length / STAGE_SIZE); }
-var previewChecked = {};
 function updatePreviewCount(){
-  var n = Object.keys(previewChecked).filter(function(en){ return previewChecked[en]; }).length;
+  var weak = loadWeak();
+  var n = previewWords.filter(function(w){ return weak.indexOf(w.en) !== -1; }).length;
   var el = document.getElementById("preview-count");
-  if(el) el.textContent = "チェック " + n + "/" + previewWords.length;
+  if(el) el.textContent = "苦手登録 " + n + "/" + previewWords.length;
 }
 function previewItem(w){
   var wrap = document.createElement("div");
@@ -3559,7 +3559,7 @@ function previewItem(w){
   headRow.style.display = "flex"; headRow.style.alignItems = "stretch";
   var check = document.createElement("button");
   check.type = "button"; check.className = "check-btn"; check.textContent = "✓";
-  check.setAttribute("aria-label", w.en + " をチェック");
+  check.setAttribute("aria-label", w.en + " を苦手単語に登録");
   check.setAttribute("aria-pressed", "false");
   check.style.margin = "6px 0 6px 8px"; check.style.alignSelf = "center";
   var head = document.createElement("button");
@@ -3578,11 +3578,19 @@ function previewItem(w){
   sp.addEventListener("click", function(ev){ ev.stopPropagation(); speak(w.en); });
   detail.appendChild(ex); detail.appendChild(sp);
   head.addEventListener("click", function(){ wrap.classList.toggle("open"); });
+  var initiallyWeak = loadWeak().indexOf(w.en) !== -1;
+  check.classList.toggle("checked", initiallyWeak);
+  check.setAttribute("aria-pressed", initiallyWeak ? "true" : "false");
+  if(initiallyWeak) wrap.classList.add("checked-item");
   check.addEventListener("click", function(){
-    previewChecked[w.en] = !previewChecked[w.en];
-    check.classList.toggle("checked", !!previewChecked[w.en]);
-    check.setAttribute("aria-pressed", previewChecked[w.en] ? "true" : "false");
-    wrap.classList.toggle("checked-item", !!previewChecked[w.en]);
+    var weak = loadWeak();
+    var idx = weak.indexOf(w.en);
+    var nowWeak;
+    if(idx === -1){ weak.push(w.en); nowWeak = true; } else { weak.splice(idx, 1); nowWeak = false; }
+    saveWeak(weak);
+    check.classList.toggle("checked", nowWeak);
+    check.setAttribute("aria-pressed", nowWeak ? "true" : "false");
+    wrap.classList.toggle("checked-item", nowWeak);
     updatePreviewCount();
   });
   headRow.appendChild(check); headRow.appendChild(head);
@@ -3592,7 +3600,6 @@ function previewItem(w){
 function showPreview(fixedWords, titleText){
   if(fixedWords){ previewWords = fixedWords.slice(); stageMode = true; }
   else { previewWords = selectSessionWords(WORDS[selectedLevel]); stageMode = false; currentStage = 0; }
-  previewChecked = {};
   var title = document.getElementById("preview-title");
   if(title) title.textContent = titleText || "🌿 予習リスト";
   var list = document.getElementById("preview-list");
