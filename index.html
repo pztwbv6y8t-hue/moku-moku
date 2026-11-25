@@ -94,13 +94,13 @@
   .level-btn .sp{display:block; font-size:11px; font-weight:700; opacity:.75; margin-top:2px;}
   .level-btn.sel{background:linear-gradient(180deg,#79c75e,#4da537); color:#fff; border-color:#256b1d; box-shadow:inset 0 2px 0 rgba(255,255,255,.4), 0 3px 0 #256b1d;}
   .speed-row{display:grid; grid-template-columns:repeat(3,1fr); gap:8px;}
-  .speed-btn, .time-btn{
+  .speed-btn, .time-btn, .voice-btn{
     border:3px solid var(--bark); border-radius:12px; padding:8px 1px 7px;
     background:linear-gradient(180deg,#caa06a,#b08247); color:#3a2410;
     box-shadow:inset 0 2px 0 rgba(255,255,255,.35), 0 3px 0 var(--bark);
     font-size:14px; font-weight:800; line-height:1.25;
   }
-  .speed-btn.sel, .time-btn.sel{background:linear-gradient(180deg,#79c75e,#4da537); color:#fff; border-color:#256b1d; box-shadow:inset 0 2px 0 rgba(255,255,255,.4), 0 3px 0 #256b1d;}
+  .speed-btn.sel, .time-btn.sel, .voice-btn.sel{background:linear-gradient(180deg,#79c75e,#4da537); color:#fff; border-color:#256b1d; box-shadow:inset 0 2px 0 rgba(255,255,255,.4), 0 3px 0 #256b1d;}
   .speed-btn .sp-sec{display:block; font-size:10px; font-weight:700; opacity:.75; margin-top:2px;}
   .stage-note{font-size:13px; font-weight:700; color:#5a4020; line-height:1.5;}
   .stage-grid{display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin-top:10px;}
@@ -391,6 +391,12 @@
         <button type="button" class="time-btn sel" data-sec="30">30秒</button>
         <button type="button" class="time-btn" data-sec="40">40秒</button>
         <button type="button" class="time-btn" data-sec="50">50秒</button>
+      </div>
+
+      <p class="sec-label">発音（ゲーム中）</p>
+      <div class="speed-row" role="group" aria-label="発音選択">
+        <button type="button" class="voice-btn sel" data-voice="1">あり</button>
+        <button type="button" class="voice-btn" data-voice="0">なし</button>
       </div>
 
       <p class="sec-label">モードを選ぶ</p>
@@ -2804,6 +2810,12 @@ function updateTimeUI(){
   var b = document.getElementById("btn-preview-start");
   if(b) b.textContent = "▶ スタート（" + selectedSec + "秒）";
 }
+var VOICE_KEY = "moku-moku-voice-v1";
+var spawnVoice = true;
+try{ if(localStorage.getItem(VOICE_KEY) === "0") spawnVoice = false; }catch(e){}
+function updateVoiceUI(){
+  document.querySelectorAll(".voice-btn").forEach(function(x){ x.classList.toggle("sel", (x.getAttribute("data-voice")==="1")===spawnVoice); });
+}
 function currentFallMs(){ return Math.round(FALL_MS[selectedLevel] * SPEED_STAGES[selectedSpeed]); }
 function fmtSec(ms){ var s = Math.round(ms/100)/10; return (s % 1 === 0) ? String(Math.round(s)) : String(s); }
 function updateSpeedUI(){
@@ -3160,6 +3172,7 @@ function checkGoldMilestone(laneIdx){
   }
 }
 function startGame(pool, fallMs){
+  try{ if("speechSynthesis" in window) window.speechSynthesis.cancel(); }catch(e){}
   stopLoops();
   if(game && game.spawnTimeouts){ game.spawnTimeouts.forEach(function(id){clearTimeout(id);}); }
   game = { pool: pool, fallMs: fallMs, score:0, combo:0, maxCombo:0, correct:0,
@@ -3221,6 +3234,7 @@ function spawnSlot(idx, presetWord){
   var word = presetWord || pickWord(excludeEns, excludeJas);
   slot.word = word; slot.pendingWord = null; slot.locked=false; slot.elapsed=0; slot.lastNow=null;
   game.lastEns.push(word.en); if(game.lastEns.length>6) game.lastEns.shift();
+  if(spawnVoice) speakQueue(word.en);
   // 葉っぱが入れ替わったら、その列の選択肢だけを新しい単語用に作り直す（もう一方の列は変えない）
   if(!presetWord){ rebuildLaneChoices(idx); }
   // 葉っぱ準備（小さいサイズのまま、左右に配置）
@@ -3493,6 +3507,18 @@ function jkResult(kind){
 }
 
 /* ================= 単語アイテム（結果・単語帳 共通） ================= */
+function speakQueue(en){
+  try{
+    if(!("speechSynthesis" in window)) return;
+    var synth = window.speechSynthesis;
+    var u = new SpeechSynthesisUtterance(en);
+    u.lang = "en-US"; u.rate = 0.95;
+    var voices = synth.getVoices();
+    for(var i=0;i<voices.length;i++){ if(voices[i].lang && voices[i].lang.toLowerCase().indexOf("en")===0){ u.voice = voices[i]; break; } }
+    if(synth.paused) synth.resume();
+    synth.speak(u);
+  }catch(e){}
+}
 function speak(en){
   try{
     if(!("speechSynthesis" in window)) return;
@@ -3777,6 +3803,15 @@ document.addEventListener("DOMContentLoaded", function(){
     });
   });
   updateTimeUI();
+
+  document.querySelectorAll(".voice-btn").forEach(function(b){
+    b.addEventListener("click", function(){
+      spawnVoice = b.getAttribute("data-voice")==="1";
+      try{ localStorage.setItem(VOICE_KEY, spawnVoice ? "1" : "0"); }catch(e){}
+      updateVoiceUI();
+    });
+  });
+  updateVoiceUI();
 
   document.querySelectorAll(".mode-btn").forEach(function(b){
     b.addEventListener("click", function(){
