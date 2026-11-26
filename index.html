@@ -269,6 +269,13 @@
   .rank-badge.rank-1{background:#fdeeda; color:#9a5a08; border-color:#eec27f;}
   .rank-badge.rank-2{background:#e2f4d8; color:#2e6b1e; border-color:#9fd184;}
   .rank-badge.rank-3{background:#fff3bf; color:#7a5200; border-color:#d9a812;}
+  .rank-select{display:flex; align-items:center; flex-wrap:wrap; gap:6px; margin-top:10px;}
+  .rank-select-label{font-size:12px; font-weight:900; color:var(--ink-soft); margin-right:2px;}
+  .rank-btn{font-size:12px; font-weight:900; padding:6px 10px; border-radius:999px; border:2px solid #cfc7b4; background:#fffdf4; color:var(--ink-soft);}
+  .rank-btn.rank-0.sel{background:#fbe3dc; color:#a8321f; border-color:#e8a08d;}
+  .rank-btn.rank-1.sel{background:#fdeeda; color:#9a5a08; border-color:#eec27f;}
+  .rank-btn.rank-2.sel{background:#e2f4d8; color:#2e6b1e; border-color:#9fd184;}
+  .rank-btn.rank-3.sel{background:#fff3bf; color:#7a5200; border-color:#d9a812;}
   .rank-wrap{display:inline-flex; align-items:center; gap:5px; flex:none;}
   .rank-score{font-size:12px; font-weight:800; color:var(--ink-soft); white-space:nowrap;}
   /* ---------- 予習リスト ---------- */
@@ -2667,6 +2674,48 @@ function loadProgress(){
 function saveProgress(map){
   try{ localStorage.setItem(PROGRESS_KEY, JSON.stringify(map)); }catch(e){}
 }
+function setRankManual(en, rank){
+  var prog = loadProgress();
+  var p = prog[en] || { rank:0, clearPlays:0, correct:0, attempts:0, due:0, perfectChecks:0 };
+  var now = Date.now();
+  var MIN = 60*1000, DAY = 24*60*MIN;
+  p.rank = rank;
+  p.clearPlays = rank;
+  if(rank < 3) p.perfectChecks = 0;
+  if(rank === 0) p.due = now;
+  else if(rank === 1) p.due = now + 10*MIN;
+  else if(rank === 2) p.due = now + 1*DAY;
+  else p.due = now + 3*DAY;
+  prog[en] = p;
+  saveProgress(prog);
+}
+function rankSelectorEl(en, onChange){
+  var box = document.createElement("div");
+  box.className = "rank-select";
+  var label = document.createElement("span");
+  label.className = "rank-select-label";
+  label.textContent = "\u30e9\u30f3\u30af\u3092\u5909\u3048\u308b";
+  box.appendChild(label);
+  var btns = [];
+  function refresh(){
+    var prog = loadProgress();
+    var cur = prog[en] ? prog[en].rank : -1;
+    btns.forEach(function(b, i){ b.classList.toggle("sel", i === cur); });
+  }
+  RANK_NAMES.forEach(function(name, i){
+    var b = document.createElement("button");
+    b.type = "button"; b.className = "rank-btn rank-" + i; b.textContent = name;
+    b.addEventListener("click", function(ev){
+      ev.stopPropagation();
+      setRankManual(en, i);
+      refresh();
+      if(onChange) onChange();
+    });
+    btns.push(b); box.appendChild(b);
+  });
+  refresh();
+  return box;
+}
 function rankBadgeEl(en){
   var prog = loadProgress();
   var p = prog[en];
@@ -3561,7 +3610,7 @@ function wordItem(w, withBadge){
   var enS = document.createElement("span"); enS.className="en"; enS.textContent = w.en;
   var jaS = document.createElement("span"); jaS.className="ja"; jaS.textContent = w.ja;
   head.appendChild(enS);
-  if(withBadge) head.appendChild(rankBadgeEl(w.en));
+  if(withBadge) var badgeBox = document.createElement("span"); badgeBox.style.display = "contents"; badgeBox.appendChild(rankBadgeEl(w.en)); head.appendChild(badgeBox);
   head.appendChild(jaS);
   var detail = document.createElement("div");
   detail.className = "word-detail";
@@ -3572,7 +3621,7 @@ function wordItem(w, withBadge){
   var sp = document.createElement("button");
   sp.type="button"; sp.className="speak-btn"; sp.textContent = "🔊 発音を聞く";
   sp.addEventListener("click", function(ev){ ev.stopPropagation(); speak(w.en); });
-  detail.appendChild(ex); detail.appendChild(sp);
+  detail.appendChild(ex); detail.appendChild(sp); detail.appendChild(rankSelectorEl(w.en, function(){ badgeBox.innerHTML = ""; badgeBox.appendChild(rankBadgeEl(w.en)); }));
   head.addEventListener("click", function(){ wrap.classList.toggle("open"); });
   wrap.appendChild(head); wrap.appendChild(detail);
   return wrap;
@@ -3605,7 +3654,7 @@ function previewItem(w){
   head.type = "button"; head.className = "word-head"; head.style.flex = "1";
   var enS = document.createElement("span"); enS.className="en"; enS.textContent = w.en;
   var jaS = document.createElement("span"); jaS.className="ja"; jaS.textContent = w.ja;
-  head.appendChild(enS); head.appendChild(rankBadgeEl(w.en)); head.appendChild(jaS);
+  head.appendChild(enS); var badgeBox = document.createElement("span"); badgeBox.style.display = "contents"; badgeBox.appendChild(rankBadgeEl(w.en)); head.appendChild(badgeBox); head.appendChild(jaS);
   var detail = document.createElement("div");
   detail.className = "word-detail";
   var ex = document.createElement("div"); ex.className = "ex";
@@ -3615,7 +3664,7 @@ function previewItem(w){
   var sp = document.createElement("button");
   sp.type="button"; sp.className="speak-btn"; sp.textContent = "🔊 発音を聞く";
   sp.addEventListener("click", function(ev){ ev.stopPropagation(); speak(w.en); });
-  detail.appendChild(ex); detail.appendChild(sp);
+  detail.appendChild(ex); detail.appendChild(sp); detail.appendChild(rankSelectorEl(w.en, function(){ badgeBox.innerHTML = ""; badgeBox.appendChild(rankBadgeEl(w.en)); }));
   head.addEventListener("click", function(){ wrap.classList.toggle("open"); });
   var initiallyWeak = loadWeak().indexOf(w.en) !== -1;
   check.classList.toggle("checked", initiallyWeak);
@@ -3651,7 +3700,7 @@ function resultItem(w, st){
   var jaS = document.createElement("span"); jaS.className="ja"; jaS.textContent = w.ja;
   var frac = document.createElement("span"); frac.className = "frac" + (st.failed ? " bad" : "");
   frac.textContent = st.correctTaps + "/" + st.attempts;
-  head.appendChild(enS); head.appendChild(rankBadgeEl(w.en)); head.appendChild(jaS); head.appendChild(frac);
+  head.appendChild(enS); var badgeBox = document.createElement("span"); badgeBox.style.display = "contents"; badgeBox.appendChild(rankBadgeEl(w.en)); head.appendChild(badgeBox); head.appendChild(jaS); head.appendChild(frac);
   var detail = document.createElement("div");
   detail.className = "word-detail";
   var ex = document.createElement("div"); ex.className = "ex";
@@ -3661,7 +3710,7 @@ function resultItem(w, st){
   var sp = document.createElement("button");
   sp.type="button"; sp.className="speak-btn"; sp.textContent = "\U0001f50a \u767a\u97f3\u3092\u805e\u304f";
   sp.addEventListener("click", function(ev){ ev.stopPropagation(); speak(w.en); });
-  detail.appendChild(ex); detail.appendChild(sp);
+  detail.appendChild(ex); detail.appendChild(sp); detail.appendChild(rankSelectorEl(w.en, function(){ badgeBox.innerHTML = ""; badgeBox.appendChild(rankBadgeEl(w.en)); }));
   head.addEventListener("click", function(){ wrap.classList.toggle("open"); });
   var initiallyWeak = loadWeak().indexOf(w.en) !== -1;
   check.classList.toggle("checked", initiallyWeak);
