@@ -2748,12 +2748,12 @@ function applyPlayResults(stats){
     var isNew = !prog[en];
     p.correct += st.correctTaps;
     p.attempts += st.attempts;
-    if(st.failed){
-      // 失敗: ランクを1つ下げる（最低0）。初回で失敗した単語は「覚えてない(0)」
+    if(st.failed && st.correctTaps === 0){
+      // 失敗（そのプレイで一度も正解できなかった場合のみ）: ランクを1つ下げる（最低0）。初回で失敗した単語は「覚えてない(0)」
       p.rank = isNew ? 0 : Math.max(0, p.rank - 1);
       if(p.rank < 3) p.perfectChecks = 0;
     } else {
-      // クリア（1回以上正解し、ミス・落下なし）: クリアしたプレイ数を+1（同じプレイ内では1回分だけ）
+      // クリア（1回以上正解した。ミス・落下があっても、正解していればこちらを優先）: クリアしたプレイ数を+1（同じプレイ内では1回分だけ）
       p.clearPlays += 1;
       var candidate = Math.min(p.clearPlays, 3);
       if(candidate >= 3){
@@ -3704,10 +3704,11 @@ function showStageSelect(){
       var words = stageWords(selectedLevel, stage);
       var cleared = 0;
       words.forEach(function(w){ var p = prog[w.en]; if(p && p.rank>=1) cleared++; });
+      var stageDone = cleared >= Math.ceil(words.length * 0.8);
       var b = document.createElement("button");
       b.type = "button";
-      b.className = "stage-btn" + (cleared>=words.length ? " done" : "");
-      var n = document.createElement("span"); n.className = "st-n"; n.textContent = (cleared>=words.length ? "✓ " : "") + stage;
+      b.className = "stage-btn" + (stageDone ? " done" : "");
+      var n = document.createElement("span"); n.className = "st-n"; n.textContent = (stageDone ? "✓ " : "") + stage;
       var s = document.createElement("span"); s.className = "st-s"; s.textContent = cleared + "/" + words.length;
       b.appendChild(n); b.appendChild(s);
       b.addEventListener("click", function(){
@@ -3842,7 +3843,10 @@ document.addEventListener("DOMContentLoaded", function(){
 
   document.getElementById("btn-stage-back").addEventListener("click", function(){ updateBookCount(); show("screen-start"); });
   document.getElementById("btn-quit").addEventListener("click", function(){
-    if(game){ game.ended = true; stopLoops(); }
+    if(game){
+      if(!game.resultsApplied){ game.resultsApplied = true; applyPlayResults(game.sessionStats); }
+      game.ended = true; stopLoops();
+    }
     updateBookCount(); show("screen-start");
   });
   document.getElementById("btn-again").addEventListener("click", function(){
