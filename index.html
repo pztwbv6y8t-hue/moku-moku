@@ -241,6 +241,10 @@
   .result-tree{display:block; font-size:54px; line-height:1.15;}
   .result-tree.stage-big{font-size:66px;}
   .result-tree-name{display:block; margin-top:3px; font-size:15px; font-weight:900; color:#fff3d6; text-shadow:0 1px 0 var(--bark);}
+  .growth-wrap{text-align:center; margin:0 0 12px;}
+  .growth-tree{display:block; line-height:1.15;}
+  .growth-name{display:block; margin-top:3px; font-size:15px; font-weight:900; color:#fff3d6; text-shadow:0 1px 0 var(--bark);}
+  .growth-count{display:block; margin-top:2px; font-size:12px; font-weight:700; color:#ffe9b8; text-shadow:0 1px 0 var(--bark);}
   .result-grid{display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:12px;}
   .result-box{background:#fffdf4; border:2px solid #e3d3ae; border-radius:12px; text-align:center; padding:10px 2px;}
   .result-box .k{display:block; font-size:11px; font-weight:800; color:var(--ink-soft);}
@@ -356,6 +360,7 @@
       <h1 class="logo">Moku-Moku English</h1>
     </div>
     <div class="board">
+      <div class="growth-wrap"><span class="growth-tree" id="growth-tree">🌰</span><span class="growth-name" id="growth-name">タネ</span><span class="growth-count" id="growth-count">うろ覚え以上 0 / 2000語</span></div>
       <button type="button" class="btn-sub" id="btn-howto-toggle" style="width:100%; margin-bottom:10px;">遊び方を開く</button>
       <div class="paper howto hidden" id="howto-box">
         落ちてくる葉っぱの英単語を見て、地面に着く前に
@@ -2834,9 +2839,46 @@ function applyPlayResults(stats){
 
 /* ================= 画面切り替え ================= */
 var screens = ["screen-start","screen-preview","screen-game","screen-result","screen-book","screen-stage","screen-janken"];
+var GROWTH_STAGES = [
+  { min:0,    emoji:"\U0001f330", name:"\u30bf\u30cd", size:30 },
+  { min:1,    emoji:"\U0001f331", name:"\u82bd", size:38 },
+  { min:100,  emoji:"\U0001f33f", name:"\u53cc\u8449", size:46 },
+  { min:300,  emoji:"\U0001f333", name:"\u82e5\u6728", size:54 },
+  { min:600,  emoji:"\U0001f333", name:"\u5927\u6728", size:64 },
+  { min:1000, emoji:"\U0001f333", name:"\u7acb\u6d3e\u306a\u5927\u6728", size:74 },
+  { min:1500, emoji:"\U0001f333\U0001f34e", name:"\u5b9f\u308a\u306e\u6728", size:74 },
+  { min:2000, emoji:"\U0001f338\U0001f333\U0001f338", name:"\u6e80\u958b\u306e\u6728", size:78 }
+];
+function totalWordCount(){
+  var n = 0;
+  [1,2,3].forEach(function(lv){ if(WORDS[lv]) n += WORDS[lv].length; });
+  return n;
+}
+function updateGrowthTree(){
+  var treeEl = document.getElementById("growth-tree");
+  if(!treeEl) return;
+  var prog = loadProgress();
+  var count = 0;
+  Object.keys(prog).forEach(function(en){ if(prog[en] && prog[en].rank >= 1) count++; });
+  var total = totalWordCount() || 2000;
+  var st = GROWTH_STAGES[0];
+  GROWTH_STAGES.forEach(function(g){ if(count >= g.min) st = g; });
+  treeEl.textContent = st.emoji;
+  treeEl.style.fontSize = st.size + "px";
+  document.getElementById("growth-name").textContent = st.name;
+  var countEl = document.getElementById("growth-count");
+  var idx = GROWTH_STAGES.indexOf(st);
+  if(idx < GROWTH_STAGES.length - 1){
+    var next = GROWTH_STAGES[idx+1];
+    countEl.textContent = "\u3046\u308d\u899a\u3048\u4ee5\u4e0a " + count + " / " + total + "\u8a9e\uff08\u6b21\u306e\u59ff\u307e\u3067 \u3042\u3068" + (next.min - count) + "\u8a9e\uff09";
+  } else {
+    countEl.textContent = "\u3046\u308d\u899a\u3048\u4ee5\u4e0a " + count + " / " + total + "\u8a9e \u30b3\u30f3\u30d7\u30ea\u30fc\u30c8\uff01";
+  }
+}
 function show(id){
   screens.forEach(function(s){ document.getElementById(s).classList.toggle("hidden", s!==id); });
   window.scrollTo(0,0);
+  if(id === "screen-start") updateGrowthTree();
 }
 
 /* ================= 状態 ================= */
