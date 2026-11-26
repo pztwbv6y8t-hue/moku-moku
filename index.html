@@ -2840,14 +2840,14 @@ function applyPlayResults(stats){
 /* ================= 画面切り替え ================= */
 var screens = ["screen-start","screen-preview","screen-game","screen-result","screen-book","screen-stage","screen-janken"];
 var GROWTH_STAGES = [
-  { min:0,    emoji:"\U0001f330", name:"\u30bf\u30cd", size:30 },
-  { min:1,    emoji:"\U0001f331", name:"\u82bd", size:38 },
-  { min:100,  emoji:"\U0001f33f", name:"\u53cc\u8449", size:46 },
-  { min:300,  emoji:"\U0001f333", name:"\u82e5\u6728", size:54 },
-  { min:600,  emoji:"\U0001f333", name:"\u5927\u6728", size:64 },
-  { min:1000, emoji:"\U0001f333", name:"\u7acb\u6d3e\u306a\u5927\u6728", size:74 },
-  { min:1500, emoji:"\U0001f333\U0001f34e", name:"\u5b9f\u308a\u306e\u6728", size:74 },
-  { min:2000, emoji:"\U0001f338\U0001f333\U0001f338", name:"\u6e80\u958b\u306e\u6728", size:78 }
+  { min:0,    emoji:"\uD83C\uDF30", name:"\u30bf\u30cd", size:30 },
+  { min:1,    emoji:"\uD83C\uDF31", name:"\u82bd", size:38 },
+  { min:100,  emoji:"\uD83C\uDF3F", name:"\u53cc\u8449", size:46 },
+  { min:300,  emoji:"\uD83C\uDF33", name:"\u82e5\u6728", size:54 },
+  { min:600,  emoji:"\uD83C\uDF33", name:"\u5927\u6728", size:64 },
+  { min:1000, emoji:"\uD83C\uDF33", name:"\u7acb\u6d3e\u306a\u5927\u6728", size:74 },
+  { min:1500, emoji:"\uD83C\uDF33\uD83C\uDF4E", name:"\u5b9f\u308a\u306e\u6728", size:74 },
+  { min:2000, emoji:"\uD83C\uDF38\uD83C\uDF33\uD83C\uDF38", name:"\u6e80\u958b\u306e\u6728", size:78 }
 ];
 function totalWordCount(){
   var n = 0;
@@ -3750,7 +3750,7 @@ function resultItem(w, st){
   var exJa = document.createElement("div"); exJa.className="ja-s"; exJa.textContent = w.exja;
   ex.appendChild(exEn); ex.appendChild(exJa);
   var sp = document.createElement("button");
-  sp.type="button"; sp.className="speak-btn"; sp.textContent = "\U0001f50a \u767a\u97f3\u3092\u805e\u304f";
+  sp.type="button"; sp.className="speak-btn"; sp.textContent = "\uD83D\uDD0A \u767a\u97f3\u3092\u805e\u304f";
   sp.addEventListener("click", function(ev){ ev.stopPropagation(); speak(w.en); });
   detail.appendChild(ex); detail.appendChild(sp); detail.appendChild(rankSelectorEl(w.en, function(){ badgeBox.innerHTML = ""; badgeBox.appendChild(rankBadgeEl(w.en)); }));
   head.addEventListener("click", function(){ wrap.classList.toggle("open"); });
